@@ -1,0 +1,520 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { preview } from '../assets';
+import { getRandomPrompt } from '../utils';
+import { FormField, Loader } from '../components';
+import fs from 'fs';
+import path from 'path';
+
+
+
+  const ImageGenerator = () => {
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState({
+    name: '',
+    prompt: '',
+    negativePrompt: '',
+    photo: '',
+    selectedckpt: '',
+    width: 256,
+    height: 256,
+    steps: 50,
+    seed: -1,
+    cfg_scale: 1.0,
+    batch_size: 4,
+    sampler_index: 'Euler a',
+  });
+
+
+  const [generatingImg, setGeneratingImg] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+
+  
+const handleChange = (e) => {
+  const { name, value } = e.target;
+  setForm({ ...form, [name]: value });
+
+  // Check if the user has selected a ckpt other than the initial option
+  if (name === "selectedckpt" && value !== "") {
+    setselectedckpt(value);
+  }
+};
+
+  const handleSurpriseMe = () => {
+    const randomPrompt = getRandomPrompt(form.prompt);
+    setForm({ ...form, prompt: randomPrompt });
+  }; 
+
+  const handleSamplingChange = (e) => {
+  const { name, value } = e.target;
+  setForm({ ...form, [name]: value });
+};
+
+const [ckptOptions, setCkptOptions] = useState([
+  { label: "chikmix_V2.safetensors", value: "gzcmggtugp8cn7" },
+  { label: "clarity_19.safetensors", value: "d8k962xmyakcfu" },
+  { label: "deliberate_v2.safetensors", value: "5pgx8i4olimo3w" }
+]);
+
+const [sampleOptions, setSamplerIndex] = useState([
+  { label: "Euler a", value: "Euler a" },
+  { label: "Euler", value: "Euler" },
+  { label: "LMS", value: "LMS" },
+  { label: "Heun", value: "Heun" },
+  { label: "DPM2", value: "DPM2" },
+  { label: "DPM2 a", value: "DPM2 a" },
+  { label: "DPM++ 2S a", value: "DPM++ 2S a" },
+  { label: "DPM++ 2M", value: "DPM++ 2M" },
+  { label: "DPM++ SDE", value: "DPM++ SDE" },
+  { label: "DPM fast", value: "DPM fast" },
+  { label: "DPM adaptive", value: "DPM adaptive" },
+  { label: "LMS Karras", value: "LMS Karras" },
+  { label: "DPM2 Karras", value: "DPM2 Karras" },
+  { label: "DPM2 a Karras", value: "DPM2 a Karras" },
+  { label: "DPM++ 2S a Karras", value: "DPM++ 2S a Karras" },
+  { label: "DPM++ 2M Karras", value: "DPM++ 2M Karras" },
+  { label: "DPM++ SDE Karras", value: "DPM++ SDE Karras" },
+  { label: "DDIM", value: "DDIM" },
+  { label: "PLMS", value: "PLMS" }
+]);
+
+const handleSliderInput = (name, value) => {
+  // do something with the name and value variables
+  console.log(`Name: ${name}, Value: ${value}`);
+};
+
+
+const generateImage = async () => {
+  if (form.prompt) {
+    try {
+      setGeneratingImg(true);
+
+      const response = await fetch('http://localhost:8080/api/v1/runpod', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: form.prompt,
+          negative_prompt: form.negativePrompt,
+          selectedckpt: form.selectedckpt,
+          width: form.width,
+          height: form.height,
+          steps: form.steps,
+          seed: form.seed,
+          cfg_scale: form.cfg_scale,
+          sampler_index: form.sampling_index,
+
+        }),
+      });
+      const data = await response.json();
+
+      console.log("the response is", data)
+
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      // Check if there are any images in the response
+      if (data.images && data.images.length > 0) {
+        // Use the first image's base64 data to create a data URL
+        const imageDataUrl = `data:image/png;base64,${data.images[0]}`;
+
+        // Update the form.photo state with the new image URL
+        setForm({ ...form, photo: imageDataUrl });
+      } else {
+        throw new Error('No images were generated.');
+      }
+
+    } catch (err) {
+      console.log("caught an alert", (err))
+      alert(err);
+    } finally {
+      console.log("finally...:", setGeneratingImg)
+      setGeneratingImg(false);
+    }
+  } else {
+    alert('Please provide proper prompt');
+  }
+};
+
+  const SliderInput = ({ label, name, min, max, value, step, onChange }) => {
+  const handleChange = (e) => {
+    const newValue = e.target.value;
+    onChange(step, newValue);
+  };
+  
+  // rest of the component code goes here
+  
+};
+
+
+
+  
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (form.prompt && form.photo) {
+      setLoading(true);
+      console.log(" submission handling has begun")
+      try {
+        const response = await fetch('http://dalle-arbb.onrender.com/api/v1/post', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ ...form }),
+        });
+
+        await response.json();
+        alert('Success');
+        navigate('/');
+      } catch (err) {
+        alert(err);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      alert('Please generate an image with proper details');
+    }
+    
+  };
+
+
+  
+
+
+return (
+  <section className="max-w-7xl mx-auto">
+    <div>
+      <h1 className="font-extrabold text-[#222328] text-[32px]">Create</h1>
+      <p className="mt-2 text-[#666e75] text-[14px] max-w-[500px]">
+        Generate an imaginative image through DALL-E AI and share it with the community
+      </p>
+     </div>
+
+
+   
+
+  <form className="mt-16 max-w-3xl" onSubmit={handleSubmit}>
+  <div className="flex flex-col gap-5">
+    <div>
+      <label htmlFor="selectedckpt" className="text-gray-900 font-medium">
+        Checkpoint
+      </label>
+    </div>
+      <div className="relative">
+        <select
+          name="selectedckpt"
+          value={form.selectedckpt}
+          onChange={handleChange}
+          className="appearance-none w-full bg-gray-50 border border-gray-300 text-gray-900 py-3 px-4 pr- rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500"
+        >
+          <option value="">Select a ckpt</option>
+          {ckptOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+      </select>
+      
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+          <svg
+            className="h-4 w-4 fill-current"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+          >
+            <path
+              d="M9.29289 12.2929C9.65338 11.9324 10.2206 11.9047 10.6129 12.2097L10.7071 12.2929L14.7071 16.2929C15.0676 16.6534 15.0953 17.2206 14.7903 17.6129C14.4854 18.0052 13.9182 18.0329 13.5259 17.7279L13.4142 17.6172L10 14.2033L6.58579 17.6172C6.19526 18.0077 5.56216 18.0077 5.17163 17.6172C4.7811 17.2267 4.7811 16.5936 5.17163 16.2031L5.29289 16.1179L9.29289 12.2929ZM9.29289 7.70711C9.65338 8.06759 10.2206 8.09532 10.6129 7.79032L10.7071 7.70711L14.7071 3.70711C15.0676 3.34662 15.0953 2.77939 14.7903 2.3871C14.4854 1.99481 13.9182 1.96708 13.5259 2.27208L13.4142 2.38284L10 5.79669L6.58579 2.38284C6.19526 1.99231 5.56216 1.99231 5.17163 2.38284C4.7811 2.77337 4.7811 3.40647 5.17163 3.797L5.29289 3.88225L9.29289 7.70711Z"
+              clipRule="evenodd"
+              fillRule="evenodd"
+            />
+          </svg>
+        </div>
+      </div>
+
+      
+
+      <div className="relative bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-64 p-3 h-64 flex justify-center items-center">
+            { form.photo ? (
+              <img
+                src={form.photo}
+                alt={form.prompt}
+                className="w-full h-full object-contain"
+              />
+            ) : (
+              <img
+                src={preview}
+                alt="preview"
+                className="w-9/12 h-9/12 object-contain opacity-40"
+              />
+            )}
+
+            {generatingImg && (
+              <div className="absolute inset-0 z-0 flex justify-center items-center bg-[rgba(0,0,0,0.5)] rounded-lg">
+                <Loader />
+              </div>
+            )}
+          </div>
+        </div>
+
+      <FormField
+        labelName="Your Name"
+        type="text"
+        name="name"
+        placeholder="Ex., john doe"
+        value={form.name}
+        handleChange={handleChange}
+      />
+
+      <FormField
+        labelName="Prompt"
+        type="text"
+        name="prompt"
+        placeholder="An Impressionist oil painting of sunflowers in a purple vase…"
+        value={form.prompt}
+        handleChange={handleChange}
+        isSurpriseMe
+        handleSurpriseMe={handleSurpriseMe}
+      />
+
+      <FormField
+        labelName="Negative Prompt"
+        type="text"
+        name="negativePrompt"
+        placeholder="An Impressionist oil painting of sunflowers in a purple vase…"
+        value={form.negativePrompt}
+        handleChange={handleChange}
+        isSurpriseMe
+        handleSurpriseMe={handleSurpriseMe}
+
+            
+
+      /> 
+
+              <div className="flex flex-col gap-5">
+      
+      <label htmlFor="sampling_index" className="text-gray-900 font-medium">
+        Sampling method
+      </label>
+      </div>
+      <div className="relative">
+        <select
+          name="sampling_index"
+          value={form.sampling_index}
+          onChange={handleSamplingChange}
+          className="appearance-none w-full bg-gray-50 border border-gray-300 text-gray-900 py-3 px-4 pr- rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500"
+        >
+          <option value="">Select a sampler</option>
+          {sampleOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+            </select>
+            </div>
+
+         <SliderInput
+     label="Steps"
+     name="steps"
+     min={1}
+     max={75}
+     value={form.steps}
+     step={1}
+     onChange={handleSliderInput}
+   />
+   
+   <div className="flex flex-col">
+     <label htmlFor="range">Steps</label>
+     <div className="flex items-center">
+       <input
+         type="range"
+         name="steps"
+         id="range"
+         min={1}
+         max={75}
+         value={form.steps}
+         step={1}
+         onChange={handleChange}
+         className="w-full mr-4"
+       />
+       <input
+         type="number"
+         value={form.steps}
+         onChange={handleChange}
+         min={1}
+         max={75}
+         className="w-16"
+       />
+     </div>
+   </div>
+   <SliderInput
+     label="width"
+     name="width"
+     min={0}
+     max={1024}
+     value={form.width}
+     step={1}
+     onChange={handleSliderInput}
+   />
+   
+   <div className="flex flex-col">
+     <label htmlFor="range">Width</label>
+     <div className="flex items-center">
+       <input
+         type="range"
+         name="width"
+         id="range"
+         min={1}
+         max={1024}
+         value={form.width}
+         step={1}
+         onChange={handleChange}
+         className="w-full mr-4"
+       />
+       <input
+         type="number"
+         value={form.width}
+         onChange={handleChange}
+         min={1}
+         max={1024}
+         className="w-16"
+       />
+     </div>
+   </div>
+   <SliderInput
+     label="Height"
+     name="height"
+     min={1}
+     max={1024}
+     value={form.height}
+     step={1}
+     onChange={handleSliderInput}
+   />
+   
+   <div className="flex flex-col">
+     <label htmlFor="range">Height</label>
+     <div className="flex items-center">
+       <input
+         type="range"
+         name="height"
+         id="range"
+         min={1}
+         max={1024}
+         value={form.height}
+         step={1}
+         onChange={handleChange}
+         className="w-full mr-4"
+       />
+       <input
+         type="number"
+         value={form.height}
+         onChange={handleChange}
+         min={1}
+         max={1024}
+         className="w-16"
+       />
+     </div>
+   </div>
+
+   <SliderInput
+     label="cfg_scale"
+     name="cfg_scale"
+     min={1}
+     max={30}
+     value={form.cfg_scale}
+     step={1}
+     onChange={handleSliderInput}
+   />
+   
+   <div className="flex flex-col">
+     <label htmlFor="range">cfg_scale</label>
+     <div className="flex items-center">
+       <input
+         type="range"
+         name="cfg_scale"
+         id="range"
+         min={1}
+         max={30}
+         value={form.cfg_scale}
+         step={1}
+         onChange={handleChange}
+         className="w-full mr-4"
+       />
+       <input
+         type="number"
+         value={form.cfg_scale}
+         onChange={handleChange}
+         min={1}
+         max={30}
+         className="w-16"
+       />
+     </div>
+   </div>
+   <SliderInput
+     label="batch_size"
+     name="batch_size"
+     min={1}
+     max={30}
+     value={form.batch_size}
+     step={1}
+     onChange={handleSliderInput}
+   />
+   
+   <div className="flex flex-col">
+     <label htmlFor="range">batch_size</label>
+     <div className="flex items-center">
+       <input
+         type="range"
+         name="batch_size"
+         id="range"
+         min={1}
+         max={30}
+         value={form.batch_size}
+         step={1}
+         onChange={handleChange}
+         className="w-full mr-4"
+       />
+       <input
+         type="number"
+         value={form.batch_size}
+         onChange={handleChange}
+         min={1}
+         max={30}
+         className="w-16"
+       />
+     </div>
+   </div>
+
+
+          
+        
+
+        <div className="mt-5 flex gap-5">
+          <button
+            type="button"
+            onClick={generateImage}
+            className=" text-white bg-orange-600 font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+          >
+            {generatingImg ? 'Generating...' : 'Generate'}
+          </button>
+        </div>
+
+        <div className="mt-10">
+          <p className="mt-2 text-[#666e75] text-[14px]">** Once you have created the image you want, you can share it with others in the community **</p>
+          <button
+            type="submit"
+            className="mt-3 text-white bg-[#6469ff] font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+          >
+            {loading ? 'Sharing...' : 'Share with the Community'}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+};
+
+export default ImageGenerator;
