@@ -10,8 +10,8 @@ import stripeRoutes from "./routes/stripeRoutes.js";
 import accountRoutes from "./routes/accountRoutes.js";
 import Stripe from "./connect/stripe.js";
 import session from "express-session";
-import User from "./src/user.model.js";
-import UserService from "./src/user.service.js";
+import User from "./src/user/user.model.js";
+import UserService from "./src/user/user.service.js";
 import hasPlan from "./src/middleware/hasPlan.js";
 import setCurrentUser from "./src/middleware/setCurrentUser.js";
 
