@@ -1,26 +1,23 @@
+// client/src/hooks/useCustomer.js
 import { useState, useEffect } from "react";
 
-const useCustomer = () => {
-  const [customer, setCustomer] = useState(null);
-  const [loading, setLoading] = useState(true);
+async function fetchCustomerId() {
+  try {
+    const res = await fetch("http://localhost:8080/api/v1/getCustomerId", {
+      credentials: "include", // Make sure to include credentials
+    });
 
-  useEffect(() => {
-    const fetchCustomer = async () => {
-      try {
-        const response = await fetch("http://localhost:8080/api/v1/account");
-        const data = await response.json();
-        setCustomer(data.customer);
-      } catch (error) {
-        console.error("Error fetching customer:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (res.status === 400) {
+      console.error("User is not logged in");
+      return null;
+    }
 
-    fetchCustomer();
-  }, []);
+    const data = await res.json();
+    setCustomerId(data.customerId);
+  } catch (error) {
+    console.error("Failed to get customerID", error);
+  }
+}
 
-  return { customer, loading };
-};
 
-export default useCustomer;
+export default fetchCustomerId;

@@ -4,16 +4,20 @@ import { useParams } from 'react-router-dom';
 import { preview } from '../assets';
 import { FormField, Loader } from '../components';
 import useCustomer from '../hooks/useCustomer';
+import { Button } from 'react-bootstrap'; // import individual component
 
 const Account = () => {
   const [customer, setCustomer] = useState(null);
   const { customerId } = useCustomer();
 
   useEffect(() => {
+  if (customerId) {
     fetch(`http://localhost:8080/api/customers/${customerId}`)
       .then((res) => res.json())
-      .then((data) => setCustomer(data.customer));
-  }, []);
+      .then((data) => setCustomer(data.customer))
+      .catch((error) => console.error(error));
+  }
+}, [customerId]);
 
   return (
     <div className="d-flex flex-column h-100">

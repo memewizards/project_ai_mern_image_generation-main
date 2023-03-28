@@ -13,17 +13,20 @@ import session from "express-session";
 import User from "./src/user.model.js";
 import UserService from "./src/user.service.js";
 import hasPlan from "./src/middleware/hasPlan.js";
-
 import setCurrentUser from "./src/middleware/setCurrentUser.js";
 
-import MemoryStoreFactory from "memorystore";
+
 import MongoStore from "connect-mongo";
-const MemoryStore = MemoryStoreFactory(session);
+import cookieParser from "cookie-parser"; // Import cookie-parser
+
+
 
 dotenv.config();
 const app = express();
 
 app.use(express.json());
+
+
 
 app.use(
   cors({
@@ -34,6 +37,8 @@ app.use(
   })
 );
 
+app.use(cookieParser()); // Use cookie-parser middleware
+
 app.use(express.json({ limit: "50mb" }));
 
 app.use("/api/v1/runpod", runPodRoutes);
@@ -43,52 +48,86 @@ app.use("/userLogin", userLoginRoutes);
 app.use("/api/v1/stripe", stripeRoutes);
 app.use("/api/v1/account", accountRoutes);
 
+app.use("/api/v1", (req, res, next) => {
+  next();
+});
 
 app.use(
   session({
-    secret: "keyboard cat",
+    secret: "keyboard cat", // Replace with a secure key
     resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: process.env.MONGODB_URL }),
+    saveUninitialized: true,
+    rolling: true, // Add this line
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URL,
+      collectionName: "sessions",
+    }),
+    cookie: {
+      httpOnly: true,
+      secure: false, // Set to true if you are using HTTPS
+      sameSite: "lax",
+    },
   })
 );
+
+
+app.get("/api/v1/getCustomerId", setCurrentUser, (req, res) => {
+  console.log("Session:", req.session);
+  if (req.session && req.session.customerID) {
+    console.log("Sending customerID:", req.session.customerID);
+    res.json({ customerId: req.session.customerID });
+  } else {
+    console.log("No customerID found in session.");
+    res.status(400).json({ error: "No customerID found in session." });
+  }
+});
+
 
 app.post("/userlogin", async (req, res) => {
   const { email } = req.body;
   const customer = await Stripe.addNewCustomer(email);
-  req.session.customerID = customer.id;
-  const response = {
-    message: "Customer created",
-    customerId: customer.id,
-  };
-  res.send(JSON.stringify(response));
+  if (customer && customer.id) {
+    req.session.customerID = customer.id;
+
+    // Set the cookie with the customer ID
+    res.cookie("customerID", customer.id, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+    res.json({ customerId: customer.id });
+
+    // Log the session after setting the customer ID
+    console.log("Session after setting customerID:", req.session);
+  } else {
+    res.status(400).json({ error: "Failed to create customer." });
+  }
 });
 
 
+app.get(
+  "/none",
+  [setCurrentUser, hasPlan("none")],
+  async function (req, res, next) {
+    res.status(200).render("none.ejs");
+  }
+);
 
-app.get('/none', [setCurrentUser, hasPlan('none')], async function (
-  req,
-  res,
-  next
-) {
-  res.status(200).render('none.ejs')
-})
+app.get(
+  "/basic",
+  [setCurrentUser, hasPlan("basic")],
+  async function (req, res, next) {
+    res.status(200).render("basic.ejs");
+  }
+);
 
-app.get('/basic', [setCurrentUser, hasPlan('basic')], async function (
-  req,
-  res,
-  next
-) {
-  res.status(200).render('basic.ejs')
-})
-
-app.get('/pro', [setCurrentUser, hasPlan('pro')], async function (
-  req,
-  res,
-  next
-) {
-  res.status(200).render('pro.ejs')
-})
+app.get(
+  "/pro",
+  [setCurrentUser, hasPlan("pro")],
+  async function (req, res, next) {
+    res.status(200).render("pro.ejs");
+  }
+);
 
 app.get("/api/v1/account", async function (req, res) {
   try {
@@ -104,36 +143,125 @@ app.get("/api/v1/account", async function (req, res) {
   }
 });
 
+app.post("/checkout", setCurrentUser, async (req, res) => {
+  const customer = req.user;
+  const { product, customerID } = req.body;
 
-app.get('/none', [setCurrentUser, hasPlan('none')], async function (
-  req,
-  res,
-  next
-) {
-  res.status(200).render('none.ejs')
-})
+  const price = productToPriceMap[product];
 
-app.get('/basic', [setCurrentUser, hasPlan('basic')], async function (
-  req,
-  res,
-  next
-) {
-  res.status(200).render('basic.ejs')
-})
+  try {
+    const session = await Stripe.createCheckoutSession(customerID, price);
 
-app.get('/pro', [setCurrentUser, hasPlan('pro')], async function (
-  req,
-  res,
-  next
-) {
-  res.status(200).render('pro.ejs')
-})
+    const ms =
+      new Date().getTime() + 1000 * 60 * 60 * 24 * process.env.TRIAL_DAYS;
+    const n = new Date(ms);
 
+    customer.plan = product;
+    customer.hasTrial = true;
+    customer.endDate = n;
+    customer.save();
 
-app.get("/", async (req, res) => {
-  res.status(200).json({
-    message: "Hello from DALL.E!",
-  });
+    res.send({
+      sessionId: session.id,
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(400);
+    return res.send({
+      error: {
+        message: e.message,
+      },
+    });
+  }
+});
+
+app.post("/billing", setCurrentUser, async (req, res) => {
+  const { customer } = req.body;
+  console.log("customer", customer);
+
+  const session = await Stripe.createBillingSession(customer);
+  console.log("session", session);
+
+  res.json({ url: session.url });
+});
+
+app.post("/webhook", async (req, res) => {
+  let event;
+
+  try {
+    event = Stripe.createWebhook(req.body, req.header("Stripe-Signature"));
+  } catch (err) {
+    console.log(err);
+    return res.sendStatus(400);
+  }
+
+  const data = event.data.object;
+
+  console.log(event.type, data);
+  switch (event.type) {
+    case "customer.created":
+      console.log(JSON.stringify(data));
+      break;
+    case "invoice.paid":
+      break;
+    case "customer.subscription.created": {
+      const user = await UserService.getUserByBillingID(data.customer);
+
+      if (data.plan.id === process.env.PRODUCT_BASIC) {
+        console.log("You are talking about basic product");
+        user.plan = "basic";
+      }
+
+      if (data.plan.id === process.env.PRODUCT_PRO) {
+        console.log("You are talking about pro product");
+        user.plan = "pro";
+      }
+
+      user.hasTrial = true;
+      user.endDate = new Date(data.current_period_end * 1000);
+
+      await user.save();
+
+      break;
+    }
+    case "customer.subscription.updated": {
+      const user = await UserService.getUserByBillingID(data.customer);
+
+      if (data.plan.id == process.env.PRODUCT_BASIC) {
+        console.log("You are talking about basic product");
+        user.plan = "basic";
+      }
+
+      if (data.plan.id === process.env.PRODUCT_PRO) {
+        console.log("You are talking about pro product");
+        user.plan = "pro";
+      }
+
+      const isOnTrial = data.status === "trialing";
+
+      if (isOnTrial) {
+        user.hasTrial = true;
+        user.endDate = new Date(data.current_period_end * 1000);
+      } else if (data.status === "active") {
+        user.hasTrial = false;
+        user.endDate = new Date(data.current_period_end * 1000);
+      }
+
+      if (data.canceled_at) {
+        console.log("You just canceled the subscription" + data.canceled_at);
+        user.plan = "none";
+        user.hasTrial = false;
+        user.endDate = null;
+      }
+      console.log("actual", user.hasTrial, data.current_period_end, user.plan);
+
+      await user.save();
+      console.log("customer changed", JSON.stringify(data));
+      break;
+    }
+    default:
+  }
+  res.sendStatus(200);
 });
 
 const startServer = async () => {
