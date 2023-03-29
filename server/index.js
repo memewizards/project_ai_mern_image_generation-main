@@ -14,32 +14,33 @@ import User from "./src/user/user.model.js";
 import UserService from "./src/user/user.service.js";
 import hasPlan from "./src/middleware/hasPlan.js";
 import setCurrentUser from "./src/middleware/setCurrentUser.js";
-
-
-import MongoStore from "connect-mongo";
-import cookieParser from "cookie-parser"; // Import cookie-parser
+import passport from "passport";
+import * as GoogleStrategy from "./src/config/google.js";
+import * as LocalStrategy from "./src/config/local.js";
+import bodyParser from "body-parser";
+import flash from "express-flash";
+import cookieParser from "cookie-parser";
+import * as uuid from "uuid";
+import bcrypt from "bcrypt";
 
 
 
 dotenv.config();
 const app = express();
-
+app.use(express.json({ limit: "50mb" }));
 app.use(express.json());
-
-
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(flash());
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // Replace with your client's URL
+    origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders: "Content-Type, Authorization, X-Requested-With",
   })
 );
-
-app.use(cookieParser()); // Use cookie-parser middleware
-
-app.use(express.json({ limit: "50mb" }));
 
 app.use("/api/v1/runpod", runPodRoutes);
 app.use("/api/v1/post", postRoutes);
@@ -54,14 +55,9 @@ app.use("/api/v1", (req, res, next) => {
 
 app.use(
   session({
-    secret: "keyboard cat", // Replace with a secure key
+    secret: "secr3t",
     resave: false,
     saveUninitialized: true,
-    rolling: true, // Add this line
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGODB_URL,
-      collectionName: "sessions",
-    }),
     cookie: {
       httpOnly: true,
       secure: false, // Set to true if you are using HTTPS
@@ -70,6 +66,8 @@ app.use(
   })
 );
 
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.get("/api/v1/getCustomerId", setCurrentUser, (req, res) => {
   console.log("Session:", req.session);
@@ -81,7 +79,6 @@ app.get("/api/v1/getCustomerId", setCurrentUser, (req, res) => {
     res.status(400).json({ error: "No customerID found in session." });
   }
 });
-
 
 app.post("/userlogin", async (req, res) => {
   const { email } = req.body;
@@ -103,7 +100,48 @@ app.post("/userlogin", async (req, res) => {
     res.status(400).json({ error: "Failed to create customer." });
   }
 });
+const isLoggedIn = (req, res, next) => {
+  req.user ? next() : res.sendStatus(401);
+};
 
+
+app.get("/g", (req, res) => {
+  res.render("google.ejs");
+});
+
+app.get("/", (req, res) => {
+  res.render("index.ejs");
+});
+
+app.get("/signup", (req, res) => {
+  res.status(200).json({ message: "Internal server error" });
+});
+
+app.get("/page/signin", (req, res) => {
+  res.render("local/signin.ejs");
+});
+
+app.get("/profile", isLoggedIn, (req, res) => {
+  res.render("profile.ejs", { user: req.user });
+});
+
+
+app.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  })
+);
+
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/g",
+    successRedirect: "/profile",
+    failureFlash: true,
+    successFlash: "Successfully logged in!",
+  })
+);
 
 app.get(
   "/none",

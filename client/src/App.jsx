@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 
 import { logo } from './assets';
-import { Home, CreatePost, ImageGenerator, UserLogin, Account } from './page';
+import { Home, CreatePost, ImageGenerator, UserLogin, Account, Signup } from './page';
+
 
 
 const App = () => (
@@ -26,7 +27,8 @@ const App = () => (
         <Route path="/create-post" element={<CreatePost />} />
         <Route path="/ImageGenerator" element={<ImageGenerator />} />
         <Route path="/UserLogin" element={<UserLogin />} />
-        <Route path="/Account/:customerId" element={<Account />} />
+        <Route path="/Account" element={<Account />} />
+        <Route path="/Signup" element={<Signup />} />
       </Routes>
     </main>
   </BrowserRouter>

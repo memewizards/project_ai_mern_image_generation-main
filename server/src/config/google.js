@@ -1,13 +1,13 @@
-const passport = require("passport");
-const UserService = require("../user");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
+import passport from "passport";
+import UserService from "../user/index.js";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 
 passport.use(
   new GoogleStrategy(
     {
-      callbackURL: process.env.CALLBACK_URL,
-      clientID: process.env.CLIENT_ID,
-      clientSecret: process.env.CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
     async (accessToken, refreshToken, profile, done) => {
       const id = profile.id;

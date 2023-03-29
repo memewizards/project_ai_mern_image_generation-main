@@ -1,7 +1,11 @@
-const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
-const UserService = require("../user");
-const bcrypt = require("bcrypt");
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import UserService from '../user/user.service.js';
+
+// rest of the code
+
+import bcrypt from "bcrypt";
+
 
 passport.use(
   new LocalStrategy(async function (email, password, done) {
