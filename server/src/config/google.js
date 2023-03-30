@@ -17,7 +17,8 @@ passport.use(
       const profilePhoto = profile.photos[0].value;
       const source = "google";
 
-      const currentUser = await UserService.getUserByEmail({ email });
+      const currentUser = await UserService.getUserByEmail(email);
+        console.log("GoogleStrategy callback profile:", profile);
 
       if (!currentUser) {
         const newUser = await UserService.addGoogleUser({

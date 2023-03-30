@@ -1,7 +1,20 @@
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
-const UserService = require("../user");
+const UserService = require("../user/user.service"); // Updated import
 const bcrypt = require("bcrypt");
+
+// ... (your existing passport code)
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  const currentUser = await User.findOne({
+    id,
+  });
+  done(null, currentUser);
+});
 
 passport.use(
   new LocalStrategy(async function (email, password, done) {

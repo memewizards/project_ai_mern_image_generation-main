@@ -4,9 +4,7 @@ const setCurrentUser = async (req, res, next) => {
   console.log("Session in setCurrentUser:", req.session);
 
   if (req.session && req.session.customerID) {
-    const user = await UserService.findOne({
-      customerID: req.session.customerID,
-    });
+    const user = await UserService.getUserByBillingID(req.session.customerID);
     console.log("User in setCurrentUser:", user);
     if (user) {
       req.user = user;

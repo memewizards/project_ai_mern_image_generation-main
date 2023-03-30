@@ -105,8 +105,8 @@ const isLoggedIn = (req, res, next) => {
 };
 
 
-app.get("/g", (req, res) => {
-  res.render("google.ejs");
+app.get("/", (req, res) => {
+  
 });
 
 app.get("/", (req, res) => {
@@ -136,10 +136,11 @@ app.get(
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "/g",
-    successRedirect: "/profile",
+    failureRedirect: "/loginFailure",
+    successRedirect: "/Account",
     failureFlash: true,
     successFlash: "Successfully logged in!",
+    
   })
 );
 

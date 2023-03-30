@@ -7,6 +7,10 @@ const addUser = ({ email, billingID, plan, endDate }) => {
     );
   }
 
+  const getUserById = async (id) => {
+    return await User.findById(id);
+  };
+
   const user = new User({ email, billingID, plan, endDate });
   return user.save();
 };
@@ -26,12 +30,17 @@ const getUserByBillingID = async (billingID) => {
 const updatePlan = (email, plan) => {
   return User.findOneAndUpdate({ email }, { plan });
 };
+const getUserById = async (id) => {
+  return await User.findById(id);
+};
+
 const UserService = {
   addUser,
   getUsers,
   getUserByEmail,
   getUserByBillingID,
   updatePlan,
+  getUserById, // Add this line
 };
 
 export default UserService;
