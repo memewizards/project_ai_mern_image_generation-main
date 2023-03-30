@@ -8,6 +8,7 @@ import path from 'path';
 
 
 
+
   const ImageGenerator = () => {
   const navigate = useNavigate();
 
@@ -29,6 +30,18 @@ import path from 'path';
 
   const [generatingImg, setGeneratingImg] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [imageList, setImageList] = useState([]);
+
+  
+const base64ToBlob = (base64) => {
+  const base64Data = base64.replace(/^data:image\/(png|jpg);base64,/, '');
+  const binary = atob(base64Data);
+  const array = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    array[i] = binary.charCodeAt(i);
+  }
+  return new Blob([array], { type: 'image/png' });
+};
 
 
   
@@ -106,7 +119,7 @@ const generateImage = async () => {
           seed: form.seed,
           cfg_scale: form.cfg_scale,
           sampler_index: form.sampling_index,
-
+          batch_size: form.batch_size,
         }),
       });
       const data = await response.json();
@@ -119,11 +132,14 @@ const generateImage = async () => {
 
       // Check if there are any images in the response
       if (data.images && data.images.length > 0) {
-        // Use the first image's base64 data to create a data URL
-        const imageDataUrl = `data:image/png;base64,${data.images[0]}`;
+        // Create an array to hold the object URLs of all images
+        const imageUrls = data.images.map((image) => {
+          const blob = base64ToBlob(image);
+          return URL.createObjectURL(blob);
+        });
 
-        // Update the form.photo state with the new image URL
-        setForm({ ...form, photo: imageDataUrl });
+        // Update the form.photo state with the new array of image URLs
+        setForm({ ...form, photo: imageUrls });
       } else {
         throw new Error('No images were generated.');
       }
@@ -139,6 +155,7 @@ const generateImage = async () => {
     alert('Please provide proper prompt');
   }
 };
+
 
   const SliderInput = ({ label, name, min, max, value, step, onChange }) => {
   const handleChange = (e) => {
@@ -235,31 +252,34 @@ return (
           </svg>
         </div>
       </div>
+      </div>
 
       
 
-      <div className="relative bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-64 p-3 h-64 flex justify-center items-center">
-            { form.photo ? (
-              <img
-                src={form.photo}
-                alt={form.prompt}
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <img
-                src={preview}
-                alt="preview"
-                className="w-9/12 h-9/12 object-contain opacity-40"
-              />
-            )}
+<div className="relative bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full h-full flex justify-center items-center flex-wrap">
+        {form.photo ? (
+          form.photo.map((image, index) => (
+            <img
+              key={`image-${index}`}
+              src={image}
+              alt={form.prompt}
+              className="w-1/3 h-1/3 object-contain m-1"
+            />
+          ))
+        ) : (
+          <img
+            src={preview}
+            alt="preview"
+            className="w-9/12 h-9/12 object-contain opacity-40"
+          />
+        )}
 
-            {generatingImg && (
-              <div className="absolute inset-0 z-0 flex justify-center items-center bg-[rgba(0,0,0,0.5)] rounded-lg">
-                <Loader />
-              </div>
-            )}
+        {generatingImg && (
+          <div className="absolute inset-0 z-0 flex justify-center items-center bg-[rgba(0,0,0,0.5)] rounded-lg">
+            <Loader />
           </div>
-        </div>
+        )}
+      </div>
 
       <FormField
         labelName="Your Name"
@@ -285,11 +305,10 @@ return (
         labelName="Negative Prompt"
         type="text"
         name="negativePrompt"
-        placeholder="An Impressionist oil painting of sunflowers in a purple vase…"
+        placeholder="(deformed, distorted, disfigured:1.3), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, (mutated hands and fingers:1.4), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation"
         value={form.negativePrompt}
         handleChange={handleChange}
-        isSurpriseMe
-        handleSurpriseMe={handleSurpriseMe}
+        
 
             
 

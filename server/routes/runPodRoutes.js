@@ -23,7 +23,7 @@ router.post("/", async (req, res) => {
         steps: parseInt(req.body.steps) || 12,
         width: parseInt(req.body.width) || 312,
         height: parseInt(req.body.height) || 512,
-        restore_faces: req.body.restore_faces === "on" ? true : false,
+        restore_faces: true,
         cfg_scale: parseInt(req.body.cfg_scale) || 5,
         seed: parseInt(req.body.seed),
         sampler_index: req.body.sampler_index,
