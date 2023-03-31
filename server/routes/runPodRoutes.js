@@ -42,26 +42,25 @@ router.post("/", async (req, res) => {
         const statusResponse = await fetch(statusEndpoint, { headers });
         const statusJson = await statusResponse.json();
         const status = statusJson.status;
-
+    
         console.log(`[${status}]`);
         console.log(status_endpoint_template)
         console.log("Request Body:", JSON.stringify(input, null, 2));
-
-        //the line below is the full response from the API
-        //console.log(`[${status}] ${JSON.stringify(statusJson, null, 4)}`);
-
+    
         if (status === "COMPLETED") {
           const output = statusJson.output;
           const images = [];
-
+    
           for (let i = 0; i < output.images.length; i++) {
             const imageString = output.images[i];
             images.push(imageString); // Add the base64 image data to the images array
           }
-
+    
           res.json({ images }); // Send the images array back to the client
           // console.log("what was sent to the client:");
           //console.log({ images });
+        } else if (status === "FAILED") {
+          res.send("The job failed. Tokens are returned to your balance."); // Return a message to the client if the job failed
         } else {
           setTimeout(() => checkStatus(jobId), 1000);
         }
@@ -70,7 +69,7 @@ router.post("/", async (req, res) => {
         res.status(500).send(error.message);
       }
     };
-
+    
     const response = await fetch(run_endpoint, {
       method: "POST",
       headers,

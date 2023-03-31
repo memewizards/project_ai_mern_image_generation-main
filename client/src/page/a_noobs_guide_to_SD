@@ -1,0 +1,115 @@
+Noob's Guide to Using Automatic1111's WebUI
+Tutorial | Guide
+Hopefully this is alright to post here, but I see a lot of the same sorts of questions and basic how-to questions come up, and I figured I'd share my experiences. I only got into SD a couple weeks ago, so this might be wrong, but hopefully it can help some people?
+
+Commandline Arguments
+There's a few things you can add to your launch script to make things a bit more efficient for budget/cheap computers. These are --precision full --no-half which appear to enhance compatbility, and --medvram --opt-split-attention which make it easier to run on weaker machines. You can also use --lowvram instead of --medvram if you're still having issues.
+
+--xformers is also an option, though you'll likely need to compile the code for that yourself, or download a precompiled version which is a bit of a pain. The results I found aren't great, but some people swear by it. I did notice that after doing this I could make larger images (going up to 1024x1024 instead of limited to 512x512). Might've been something else though.
+
+--deepdanbooru --api --gradio-img2img-tool color-sketch
+
+These three arguments are all "quality of life" stuff. deepdanbooru is an additional captioning tool, --api lets you use other software with it like painthua. And --gradio-img2img-tool color-sketch lets you use colors in img2img.
+
+NOTE: Do not use "--disable-safe-unpickle". You may be instructed to, but this disables your "antivirus" that protects against malicious models.
+
+txt2img tab
+This lets you create images by entering a text "prompt". There's a variety of options here, that aren't exactly clear on what they do, so hopefully I can explain them a bit.
+
+At the top of the page you should see "Stable Diffusion Checkpoint". This is a drop down for your models stored in the "models/Stable-Diffusion" folder of your install. Use the "refresh" button next to the drop-down if you aren't seeing a newly added model. Models are the "database" and "brain" of the AI. They contain what the AI knows. Different models will have the AI draw differently and know about different things. You can train these using "dreambooth".
+
+Below that you have two fields, the first is your "positive prompt" and the second your "negative prompt". The positive prompt is what you want the AI to draw, and the negative prompt is what you want it to avoid. You can use plain natural english to write out a prompt such as "a photo of a woman". However, the AI doesn't "think" like that. Instead, your words are converted into "tags" or "tokens", and the AI understands each word as such. For example, "woman" is one, and so is "photo". In this sense, you can write your prompt as a list of tags. So instead of a photo of a woman you can use photo, woman to get a similar result. If you've ever used a booru site, or some other site that has tagged images, it works remarkably similar. Words like "a", "the", etc. can be comfortably ignored.
+
+You can also increase emphasis on particular words, phrases, etc. You do this by putting them in parenthesis. photo, (woman) will put more emphasis on the image being of a woman. Likewise you can do (woman:1.2) or some other number, to specify the exact amount. Or add extra parenthesis to add emphasis without that. IE ((woman)) is more emphasized than (woman). You can decrease emphasis by using [] such as [woman] or (woman:0.8) (numbers lower than 1). You can highlight words in your prompts and use ctrl+up arrow/down arrow to add or reduce emphasis automatically. Words that are earlier in the prompt are automatically emphasized more. So word order is important. Some models understand "words" that are more like tags. This is especially true of anime-focused models trained on the booru sites. For example "1girl" is not a word in english, but it's a tag used on the sites, and thus will behave accordingly, however it will not work in the base SD model (or it might, but with undesired results). Certain models will provide a "prompt" that helps direct the style/character. Be sure to use them if you want to replicate the results.
+
+The buttons on the right let you "manage" your prompts. The top button adds a random artist (from the artists.csv file). There's also a button to save the prompt as a "style" which you can select from the drop-down menu to the right of that. These are basically just additions to your prompt, as if you typed them.
+
+"Sampling Steps" is how much "work" you want the AI to put into the the generated picture. The AI makes several "passes" or "drafts" and iteratively changes/improves the picture to try and make your prompt. At something like 1 or 2 steps you're just going to get a blurry mess (as if the foundational paint was just laid). Whereas higher step counts will be like continually adding more and more paint, which may not really create much of an impact if it's too high. Likewise, each "step" increases the time it takes to create the image. I found that 20 steps is a good starting and default amount. Any lower than 10 and you're not going to get good results.
+
+"Sampling Method" is essentially which AI artist you want to create the picture. Euler A is the default and is honestly decent at 20 steps. Different methods can create coherent pictures with fewer or more steps, and will do so differently. I find that the method isn't super important as many still give great results, but I tend to use Euler A, LMS, or DPM++ 2M Karras.
+
+Width and Height are obvious. This is the resolution of the generated picture. 512x512 is the default and what most models are trained on, and as a result will give the best results in most cases. The width and height must be a multiple of 64, so keep this in mind. Setting it lower generally isn't a good idea as in most cases I find it just generates junk. However higher is often fine, but takes up more vram.
+
+The three tick boxes of "restore faces", "tiling", and "high res fix" are extra things you can tell the AI to do. "restore faces" runs it through a face generator to help fix up faces (I tend to not use this though). Tiling makes the image tile (be able to seamlessly repeat). With high res fix you can use it to run the image once at a lower resolution to get nice overall structure, and then re-run it at a higher resolution with img2img to fill in finer details. It generally produces better results when creating images at larger than 512x512, avoiding weird artefacts that sometimes come in (like multiple heads). But if you're not getting weird results then no need to enable it.
+
+Batch count and batch size are just how many pics you want. Lower end machines might struggle if you turn these up. I generally leave batch count alone, and just turn batch size to the number of pics I want (usually 1, but sometimes a few more if I like the results). Higher amount of pics = longer to see the generation.
+
+CFG Scale is essentially "creativity vs prompt literalness". A low cfg tells the AI to ignore your prompt and just make what it wants. A high cfg tells the AI to stop being creative and follow your orders exactly. 7 is the suggested default, and is what I tend to use. Some models work best with different CFG numbers, such as some anime models working well with 12 cfg. In general I'd recommend staying between 6-13 cfg. Any lower or higher and you start getting weird results (either things nothing to do with your prompt, or "frying" and making the image look bad). If you're not getting what you want, you may want to turn up cfg. Or if the image looks a bit "fried" it might be best to turn it down, or if it's taking some part of your prompt too seriously. Tweaking CFG is IMO as important as changing your prompt around.
+
+Seed is the specific image that results. Think of it as a unique identifier for that particular image. Leave this as -1, which means "random seed". This will get you a new picture every time you use the exact same settings. If you want the same picture to result, make sure you use the same seed. This is essentially the "starting position" for the AI. Unless you're trying to recreate someone's results, or wish to iterate on the same image (and slowly change your prompt), it's best to keep this random.
+
+Lastly there's a drop-down menu for scripts you have installed. These do extra things depending on the script. Most notably there's the "X/Y Plot" script, which lets you create those grid images you see posted. You can set the X and Y to be different parameters, and create many pics with varying traits (but are otherwise identical). For example you can set it to show the same picture but with different step counts, or with different cfg scales, to compare the results.
+
+As a side note, your VAE, Hypernetworks, Clip Skip setting, and Embeddings also play into your txt2img generations. The first three can be configured in the "settings" menu.
+
+VAE = Additional adjustments to your model. Some models come with a VAE, be sure to use them for the best results.
+
+Embeddings = These are extra "tags" that you can install. You put them in your "embeddings" folder and restart, and you'll be able to use them by simply typing the name into your prompt.
+
+Hypernetworks = To me these seem to be more like a photo filter. They "tint" the image in some way and are overlaid on top of your model/vae.
+
+Clip skip = This is a setting that should generally be left at 1. Some models use clip skip of 2, which is basically telling the AI to interpret the text "less". In normal usage, this can make the AI not understand your prompt, but some models expect it, and it can alter your results.
+
+img2img - Inpainting
+I haven't messed around with the plain img2img that much, so this will be focused on inpainting (though a lot of the settings are the same for both).
+
+Again the same applies here for your model, vae, hypernetworks, embeddings, and prompt. These all work exactly the same as with txt2img. For inpainting, I find that this inpainting model works the best, rather than specifying some other model.
+
+Below that you'll be able to load an image from your computer (if you haven't send an image here already from txt2img). This is your "starting image" and the one you want to edit. There's a "mask" drawing tool, which allows you to select what part of the image you want to edit. There's also an "Inpaint not masked" option, to have it paint everywhere there isn't a mask, if you prefer that.
+
+"Masked content" is what you want the AI to fill the mask with before it starts generating your inpainted image. Depending on what you're doing, which one you select will be different. "Fill" just takes the rest of the image and tries to figure out what is most similar. "original" is literally just what's already there. "latent noise" is just noise (random colors/static/etc). And "latent nothing" is, well, nothing. I find that using "fill" and "latent nothing" tend to work best when replacing things.
+
+"Inpaint at full resolution" basically just focuses on your masked area, and will paint it at full size, and then resize it to fit your image automatically. This option is great as I find it gives better results, and keeps the aspect ratio and resolution of your image.
+
+Below that are what you want the AI to do to your image if you don't select inpaint at full resolution. These are resize (just stretches the image), crop and resize (cuts out a part of your image), and resize and fill (resizes the image, and then fills in the extra space with similar content, albeit blurred).
+
+Quite a few of the settings are already discussed: width/height, sampling steps and method, batch size, cfg scale, etc. all work the same. However this time we have "denoising strength" which tells the AI how much it should pay attention to the original image. 0.5 and below will functionally get you the same image. Whereas 1.0 will replace it entirely. I find keeping it at 1.0 is best for inpainting in my usage, as it lets me replace what's in the image with my desired content.
+
+Lastly, there's "interrogate clip" and "interrogate deepbooru" (if you enabled the option earlier). These ask the AI to describe your image and place the description into the prompt field. clip will use natural language descriptions, while deepbooru will use booru tags. This is essentially the text equivalent to your image regardless of how much sense it makes.
+
+Keep in mind: your prompt should be what you want in the masked area, not a description of your entire image.
+
+Extras
+This tab is mostly used for upscaling, ie making a higher resolution image of an existing image. There's a variety of methods to use here, and you can set how much larger you want it to be. pretty simple.
+
+PNG Info
+This is a metadata viewing tool. You can load up an image here and often you'll see the prompt and settings used to generate the picture.
+
+Checkpoint Merger
+This lets you merge two models together, creating a blended result. The best way to think of this is like mixing paints. You get some mixture/blended combination of the two, but not either one in particular. For example if you blend an anime style and a disney cartoon style, you end up with an anime-esque, disney cartoon-esque style. You can also use this to "add" parts of one model to another. For example, if you have an anime style, and then a model of yourself, you can add yourself to the anime style. This isn't perfect (and it's better to just train/finetune the model directly), but it works.
+
+Model A is your starting model. This is your base paint.
+
+Model B is your additional model. This is what you want to add or mix with model A.
+
+Model C is only used for the "add difference" option, and it should be the base model for B. IE, C will be removed from B.
+
+"Weighted sum" lets you blend A and B together, like mixing paint in a particular ratio. The slider "multiplier" says how much of each one to use. At 0.5, you get a 50:50 mix. At 0.25 you get 75% A, and 25% B. At 0.75 you get 25% A and 75% B.
+
+"Add Difference", as mentioned, will do the same thing, but first it'll remove C from B. So if you have your model B trained on SD1.5, you want model C to be SD1.5, and that'll get the "special" finetuned parts of B, and remove all the regular SD1.5 stuff. It'll then add in B into A at the ratio specified.
+
+For example: Model A being some anime model. Model B being a model trained on pics of yourself (using SD1.5 as a base). Model C is then SD1.5. You set the multiplier to be 0.5 and use the "add difference" option. This will then result in an anime-style model, that includes information about yourself. Be sure to use the model tags as appropriate in your prompt.
+
+Settings
+There's some extra settings which I find particularly useful. First there's an option to "Always save all generated images". This lets you auto-save everything so you don't lose anything (you can always delete them later!). Likewise there's "Save text information about generation parameters as chunks to png files" and "Add model hash to generation information" and "Add model name to generation information" which let you save what models you used for each image, in plain english.
+
+In "Quicksettings list" set it to sd_model_checkpoint, sd_hypernetwork, sd_hypernetwork_strength, CLIP_stop_at_last_layers, sd_vae to add in hypernetworks, clip skip, and vae to the top of your screen, so you don't have to go into settings to change them. Very handy when you're jumping between models.
+
+Be sure to disable "Filter NSFW content" if you are intending on making nsfw images. I also enabled "Do not add watermark to images".
+
+You can also set the directories that it'll store your images in, if you care about that. Otherwise it'll just go into the "outputs" folder.
+
+Extensions
+This lets you add extra stuff to webui. go to "available" and hit "load" to see the list. I recommend getting the "image browser" extension which will add a tab that lets you see your created images inside the webui. "Booru tag autocompletion" is also a must for anyone using anime models, as it gives you a drop-down autocomplete while typing prompts that lets you see the relevant booru tags, and how popular they are (ie how likely they are to work well).
+
+Lastly,
+
+For anime models (often trained on novelai or anythingv3), It's often a great idea to use the default nai prompts that are auto-appended. These are:
+
+Prompt: Masterpiece, best quality
+
+Negative prompt: lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry
+
+Saving this as a "style" lets you just select "nai prompt" from your styles dropdown, saving typing/copying time.
+
+Hopefully this serves as a helpful introduction to how to use stable diffusion through automatic1111's webui, and some tips/tricks that helped me.

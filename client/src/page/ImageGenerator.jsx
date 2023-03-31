@@ -7,8 +7,6 @@ import fs from 'fs';
 import path from 'path';
 
 
-
-
   const ImageGenerator = () => {
   const navigate = useNavigate();
 
@@ -43,6 +41,26 @@ const base64ToBlob = (base64) => {
   return new Blob([array], { type: 'image/png' });
 };
 
+const downloadAllImages = async () => {
+  if (form.photo && form.photo.length > 0) {
+    const zip = new JSZip();
+
+    const imagePromises = form.photo.map(async (url, index) => {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      zip.file(`image_${index + 1}.png`, blob);
+    });
+
+    await Promise.all(imagePromises);
+
+    const zipFile = await zip.generateAsync({ type: 'blob' });
+    saveAs(zipFile, 'images.zip');
+  } else {
+    alert('No images to download');
+  }
+};
+
+
 
   
 const handleChange = (e) => {
@@ -58,7 +76,11 @@ const handleChange = (e) => {
   const handleSurpriseMe = () => {
     const randomPrompt = getRandomPrompt(form.prompt);
     setForm({ ...form, prompt: randomPrompt });
-  }; 
+  };
+  const handleSuggestedNegativePrompt = () => {
+    const randomNegativePrompt = getRandomNegativePrompt(form.negativePrompt);
+    setForm({ ...form, negativePrompt: randomNegativePrompt });
+  };  
 
   const handleSamplingChange = (e) => {
   const { name, value } = e.target;
@@ -257,29 +279,33 @@ return (
       
 
 <div className="relative bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full h-full flex justify-center items-center flex-wrap">
-        {form.photo ? (
-          form.photo.map((image, index) => (
-            <img
-              key={`image-${index}`}
-              src={image}
-              alt={form.prompt}
-              className="w-1/3 h-1/3 object-contain m-1"
-            />
-          ))
-        ) : (
+  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 w-full">
+    {form.photo ? (
+      form.photo.map((image, index) => (
+        <div key={`image-container-${index}`}>
           <img
-            src={preview}
-            alt="preview"
-            className="w-9/12 h-9/12 object-contain opacity-40"
+            key={`image-${index}`}
+            src={image}
+            alt={form.prompt}
+            className="w-full h-auto object-contain"
           />
-        )}
+        </div>
+      ))
+    ) : (
+      <img
+        src={preview}
+        alt="preview"
+        className="w-9/12 h-9/12 object-contain opacity-40"
+      />
+    )}
+  </div>
 
-        {generatingImg && (
-          <div className="absolute inset-0 z-0 flex justify-center items-center bg-[rgba(0,0,0,0.5)] rounded-lg">
-            <Loader />
-          </div>
-        )}
-      </div>
+  {generatingImg && (
+    <div className="absolute inset-0 z-0 flex justify-center items-center bg-[rgba(0,0,0,0.5)] rounded-lg">
+      <Loader />
+    </div>
+  )}
+</div>
 
       <FormField
         labelName="Your Name"
@@ -308,7 +334,8 @@ return (
         placeholder="(deformed, distorted, disfigured:1.3), poorly drawn, bad anatomy, wrong anatomy, extra limb, missing limb, floating limbs, (mutated hands and fingers:1.4), disconnected limbs, mutation, mutated, ugly, disgusting, blurry, amputation"
         value={form.negativePrompt}
         handleChange={handleChange}
-        
+        isSuggestedNegativePrompt
+        handleSuggestedNegativePrompt={handleSuggestedNegativePrompt}
 
             
 
@@ -376,7 +403,7 @@ return (
      min={0}
      max={1024}
      value={form.width}
-     step={1}
+     step={64}
      onChange={handleSliderInput}
    />
    
@@ -387,10 +414,10 @@ return (
          type="range"
          name="width"
          id="range"
-         min={1}
+         min={64}
          max={1024}
          value={form.width}
-         step={1}
+         step={64}
          onChange={handleChange}
          className="w-full mr-4"
        />
@@ -398,8 +425,9 @@ return (
          type="number"
          value={form.width}
          onChange={handleChange}
-         min={1}
+         min={64}
          max={1024}
+         step={64}
          className="w-16"
        />
      </div>
@@ -410,7 +438,7 @@ return (
      min={1}
      max={1024}
      value={form.height}
-     step={1}
+     step={64}
      onChange={handleSliderInput}
    />
    
@@ -421,10 +449,10 @@ return (
          type="range"
          name="height"
          id="range"
-         min={1}
+         min={64}
          max={1024}
          value={form.height}
-         step={1}
+         step={64}
          onChange={handleChange}
          className="w-full mr-4"
        />
@@ -432,12 +460,14 @@ return (
          type="number"
          value={form.height}
          onChange={handleChange}
-         min={1}
+         min={64}
          max={1024}
+         step={64}
          className="w-16"
        />
      </div>
    </div>
+   
 
    <SliderInput
      label="cfg_scale"
@@ -508,6 +538,12 @@ return (
      </div>
    </div>
 
+            <button
+  onClick={downloadAllImages}
+  className="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700"
+>
+  Download All Images
+</button>
 
           
         

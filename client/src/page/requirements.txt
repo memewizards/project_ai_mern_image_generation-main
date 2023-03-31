@@ -1,52 +1,17 @@
-Add the following to the react interface. 
+Note that a job of 27 in the batch failed to the clarity model. There were already some images loaded on the page.
+When the job was re-run after loading the page, and with only 3 images, it completed successfully.
 
-1. Sliders for steps, width, height, cfg_scale, batch_size. 
-2. Input Boxes next to the sliders for steps, width, height, cfg_scale, batch_size. Make sure the sliders and input boxes values reflect each other when the user makes changes. 
-3. an input box for 'seed'. Set it to -1 by default. Show the default value in the box. 
-4 a drop down menu for sampler_index. The available values shall be <option value="Euler a">Euler a</option>
-        <option value="Euler">Euler</option>
-        <option value="LMS">LMS</option>
-        <option value="Heun">Heun</option>
-        <option value="DPM2">DPM2</option>
-        <option value="DPM2 a">DPM2 a</option>
-        <option value="DPM++ 2S a">DPM++ 2S a</option>
-        <option value="DPM++ 2M">DPM++ 2M</option>
-        <option value="DPM++ SDE">DPM++ SDE</option>
-        <option value="DPM fast">DPM fast</option>
-        <option value="DPM adaptive">DPM adaptive</option>
-        <option value="LMS Karras">LMS Karras</option>
-        <option value="DPM2 Karras">DPM2 Karras</option>
-        <option value="DPM2 a Karras">DPM2 a Karras</option>
-        <option value="DPM++ 2S a Karras">DPM++ 2S a Karras</option>
-        <option value="DPM++ 2M Karras">DPM++ 2M Karras</option>
-        <option value="DPM++ SDE Karras">DPM++ SDE Karras</option>
-        <option value="DDIM">DDIM</option>
-        <option value="PLMS">PLMS</option>
-Don't forget to remove <option value= </option> syntax and replace it with react syntax. 
+We are testing again at 14 images in the batch size. 
 
-5. Make sure that the value for the slider/box/ or dropdown menu corsponds with the form.value that's passed to req body. 
+It sucseeded. I will try 27 images again. 
 
-here is an example of how the final request body will look like: 
-const generateImage = async () => {
-  if (form.prompt) {
-    try {
-      setGeneratingImg(true);
+trying again with 19 images. Sucseeded. 
 
-      const response = await fetch('http://localhost:8080/api/v1/runpod', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: form.prompt,
-          negative_prompt: form.negativePrompt,
-          selectedckpt: form.selectedckpt,
-          width: form.width,
-          height: form.height,
-          steps: form.steps,
-          seed: form.seed,
-          cfg_scale: form.cfg_scale,
-          sampler_index: form.sampler_index,
+trying again with 23 images. failed. 
 
-        }),
-      });
+It's possible that there is a problem with the buffer or ram on this device. 
+the system is running slowlly and made need a restart. 
+
+a job at 49 steps at 1024x1024 with a batch size of 9 failed. 
+
+The larger batch sizes are failing with the same error.. We ought to report this to runpod. 
