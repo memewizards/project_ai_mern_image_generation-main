@@ -10,20 +10,22 @@ import stripeRoutes from "./routes/stripeRoutes.js";
 import accountRoutes from "./routes/accountRoutes.js";
 import Stripe from "./connect/stripe.js";
 import session from "express-session";
+import url from "url";
+import path from "path";
 import User from "./src/user/user.model.js";
 import UserService from "./src/user/user.service.js";
 import hasPlan from "./src/middleware/hasPlan.js";
 import setCurrentUser from "./src/middleware/setCurrentUser.js";
-import passport from "passport";
+import passport from "./src/config/passport.js";
 import * as GoogleStrategy from "./src/config/google.js";
 import * as LocalStrategy from "./src/config/local.js";
 import bodyParser from "body-parser";
-import flash from "express-flash";
+import flash from "connect-flash";
+
 import cookieParser from "cookie-parser";
 import * as uuid from "uuid";
 import bcrypt from "bcrypt";
-
-
+import "./src/config/google.js";
 
 dotenv.config();
 const app = express();
@@ -109,40 +111,41 @@ app.get("/", (req, res) => {
   
 });
 
-app.get("/", (req, res) => {
-  res.render("index.ejs");
+// app.get("/", (req, res) => {
+//   res.render("index.ejs");
+// });
+
+// app.get("/signup", (req, res) => {
+//   res.status(200).json({ message: "Internal server error" });
+// });
+
+// app.get("/page/signin", (req, res) => {
+//   res.render("local/signin.ejs");
+// });
+
+// app.get("/profile", isLoggedIn, (req, res) => {
+//   res.render("profile.ejs", { user: req.user });
+// });
+
+
+app.get("/auth/google", (req, res, next) => {
+  console.log("Reached /auth/google route");
+  passport.authenticate("google", { scope: ["profile", "email"] })(
+    req,
+    res,
+    next
+  );
 });
 
-app.get("/signup", (req, res) => {
-  res.status(200).json({ message: "Internal server error" });
-});
-
-app.get("/page/signin", (req, res) => {
-  res.render("local/signin.ejs");
-});
-
-app.get("/profile", isLoggedIn, (req, res) => {
-  res.render("profile.ejs", { user: req.user });
-});
-
-
-app.get(
-  "/auth/google",
+app.get("/auth/google/callback", (req, res, next) => {
+  console.log("Reached /auth/google/callback route");
   passport.authenticate("google", {
-    scope: ["profile", "email"],
-  })
-);
-
-app.get(
-  "/auth/google/callback",
-  passport.authenticate("google", {
-    failureRedirect: "/loginFailure",
-    successRedirect: "/Account",
+    failureRedirect: "/g",
+    successRedirect: "/account",
     failureFlash: true,
     successFlash: "Successfully logged in!",
-    
-  })
-);
+  })(req, res, next);
+});
 
 app.get(
   "/none",
@@ -301,6 +304,19 @@ app.post("/webhook", async (req, res) => {
     default:
   }
   res.sendStatus(200);
+});
+
+
+// Get the equivalent of __dirname
+const __filename = url.fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve the static React files
+app.use(express.static(path.join(__dirname, '..', 'build')));
+
+// Catch-all route to serve the index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'));
 });
 
 const startServer = async () => {

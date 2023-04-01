@@ -1,20 +1,28 @@
 import UserService from "../user/user.service.js";
 
 const setCurrentUser = async (req, res, next) => {
-  console.log("Session in setCurrentUser:", req.session);
+  console.log("Reached setCurrentUser middleware");
+  console.log("Session email:", req.session.email);
+  const { email } = req.session;
 
-  if (req.session && req.session.customerID) {
-    const user = await UserService.getUserByBillingID(req.session.customerID);
-    console.log("User in setCurrentUser:", user);
-    if (user) {
-      req.user = user;
+  console.log("Email from header:", email);
+
+  if (email) {
+    user = await UserService.getUserByEmail(email);
+
+    console.log("User object:", user);
+
+    if (!user) {
+      console.error(
+        "setCurrentUser.js: Could not find user with email:",
+        email
+      );
     } else {
-      console.log("No user found for customerID:", req.session.customerID);
+      req.user = user;
     }
+    next();
   } else {
-    console.log("No customerID found in session in setCurrentUser.");
+    res.redirect("/");
   }
-
-  next();
 };
 export default setCurrentUser;

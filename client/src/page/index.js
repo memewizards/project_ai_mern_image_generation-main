@@ -4,6 +4,8 @@ import ImageGenerator from './ImageGenerator';
 import UserLogin from './UserLogin';
 import Account from "./Account";
 import Signup from "./Signup";
+import Profile from "./Profile";
+
 
 export {
   Home,
@@ -12,4 +14,6 @@ export {
   UserLogin,
   Account,
   Signup,
+  Profile,
+  
 };

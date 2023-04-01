@@ -1,46 +1,73 @@
 import User from "./user.model.js";
 
-const addUser = ({ email, billingID, plan, endDate }) => {
-  if (!email || !billingID || !plan) {
-    throw new Error(
-      "Missing Data. Please provide values for email, billingID, plan"
-    );
-  }
-
-  const getUserById = async (id) => {
-    return await User.findById(id);
+const addGoogleUser =
+  (User) =>
+  ({ id, email, firstName, lastName, profilePhoto }) => {
+    const user = new User({
+      id,
+      email,
+      firstName,
+      lastName,
+      profilePhoto,
+      source: "google",
+    });
+    return user.save();
   };
 
-  const user = new User({ email, billingID, plan, endDate });
-  return user.save();
-};
 
-const getUsers = () => {
+const addLocalUser =
+  (User) =>
+  ({ id, email, firstName, lastName, password }) => {
+    const user = new User({
+      id,
+      email,
+      firstName,
+      lastName,
+      password,
+      source: "local",
+    });
+    return user.save();
+  };
+
+const addUser =
+  (User) =>
+  ({ email, billingID, plan, endDate }) => {
+    if (!email || !billingID || !plan) {
+      throw new Error(
+        "Missing Data. Please provide values for email, billingID, plan"
+      );
+    }
+
+    const user = new User({ email, billingID, plan, endDate });
+    return user.save();
+  };
+
+const getUsers = (User) => () => {
   return User.find({});
 };
 
-const getUserByEmail = async (email) => {
-  return await User.findOne({ email });
-};
+const getUserByEmail =
+  (User) =>
+  async ({ email }) => {
+    return await User.findOne({ email });
+  };
 
-const getUserByBillingID = async (billingID) => {
+const getUserByBillingID = (User) => async (rsbillingID) => {
   return await User.findOne({ billingID });
 };
 
-const updatePlan = (email, plan) => {
-  return User.findOneAndUpdate({ email }, { plan });
-};
-const getUserById = async (id) => {
-  return await User.findById(id);
+const updatePlan = (User) => (email, plan) => {
+  return User.findOneAndUpdate({ email, plan });
 };
 
 const UserService = {
-  addUser,
-  getUsers,
-  getUserByEmail,
-  getUserByBillingID,
-  updatePlan,
-  getUserById, // Add this line
+  addGoogleUser: addGoogleUser(User),
+  addLocalUser: addLocalUser(User),
+  addUser: addUser(User),
+  getUsers: getUsers(User),
+  getUserByEmail: getUserByEmail(User),
+  updatePlan: updatePlan(User),
+  getUserByBillingID: getUserByBillingID(User),
 };
 
 export default UserService;
