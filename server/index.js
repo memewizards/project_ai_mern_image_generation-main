@@ -27,6 +27,11 @@ import * as uuid from "uuid";
 import bcrypt from "bcrypt";
 import "./src/config/google.js";
 
+import customerRoutes from "./routes/customerRoutes.js";
+
+// Add this line after other route middlewares
+
+
 dotenv.config();
 const app = express();
 app.use(express.json({ limit: "50mb" }));
@@ -34,7 +39,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(flash());
-
+app.use("/posts", postRoutes);
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -54,7 +59,7 @@ app.use("/api/v1/account", accountRoutes);
 app.use("/api/v1", (req, res, next) => {
   next();
 });
-
+app.use(customerRoutes);
 app.use(
   session({
     secret: "secr3t",
@@ -67,6 +72,16 @@ app.use(
     },
   })
 );
+
+app.use(cookieParser());
+app.use(
+  session({
+    secret: "secr3t",
+    resave: false,
+    saveUninitialized: true,
+  })
+);
+
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -123,9 +138,15 @@ app.get("/", (req, res) => {
 //   res.render("local/signin.ejs");
 // });
 
-// app.get("/profile", isLoggedIn, (req, res) => {
-//   res.render("profile.ejs", { user: req.user });
-// });
+app.get("/profile", isLoggedIn, (req, res) => {
+  console.log("req.user:", req.user); // Add this line to log req.user
+  if (req.user) {
+    res.json({ user: req.user });
+  } else {
+    res.status(404).json({ message: "User not found" });
+  }
+});
+
 
 
 app.get("/auth/google", (req, res, next) => {
@@ -139,13 +160,24 @@ app.get("/auth/google", (req, res, next) => {
 
 app.get("/auth/google/callback", (req, res, next) => {
   console.log("Reached /auth/google/callback route");
-  passport.authenticate("google", {
-    failureRedirect: "/g",
-    successRedirect: "/account",
-    failureFlash: true,
-    successFlash: "Successfully logged in!",
+  passport.authenticate("google", (err, user, info) => {
+    if (err) {
+      console.log(err);
+      return next(err);
+    }
+    if (!user) {
+      return res.redirect("/g");
+    }
+    req.logIn(user, (err) => {
+      if (err) {
+        console.log(err);
+        return next(err);
+      }
+      return res.redirect("http://localhost:5173/profile");
+    });
   })(req, res, next);
 });
+
 
 app.get(
   "/none",
@@ -311,13 +343,7 @@ app.post("/webhook", async (req, res) => {
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Serve the static React files
-app.use(express.static(path.join(__dirname, '..', 'build')));
 
-// Catch-all route to serve the index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'build', 'index.html'));
-});
 
 const startServer = async () => {
   try {

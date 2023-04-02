@@ -1,122 +1,69 @@
-import React from 'react';
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { preview } from '../assets';
-import { FormField, Loader } from '../components';
-import useCustomer from '../hooks/useCustomer';
-import { Button } from 'react-bootstrap'; // import individual component
+import React, { useState, useEffect } from 'react';
+import useCustomer from "../hooks/useCustomer";
 
-const Account = () => {
-  const [customer, setCustomer] = useState(null);
-  const { customerId } = useCustomer();
+const Profile = () => {
+  const user = useCustomer();
+
 
   useEffect(() => {
-  if (customerId) {
-    fetch(`http://localhost:8080/api/customers/${customerId}`)
+    fetch('/profile')
       .then((res) => res.json())
-      .then((data) => setCustomer(data.customer))
+      .then((data) => setUser(data.user))
       .catch((error) => console.error(error));
-  }
-}, [customerId]);
+  }, []);
+  
 
   return (
-    <div className="d-flex flex-column h-100">
-      {/* Begin page content */}
-      <main role="main" className="flex-shrink-0">
-        <div className="container">
-          <h1 className="mt-5">Account Dashboard</h1>
-          {customer ? (
-            <>
-              <p className="lead">Hi {customer.email}</p>
-              {customer.plan === 'none' ? (
-                <>
-                  <p className="lead">
-                    You are currently not on any plan. Purchase a subscription
-                    below.
-                  </p>
-                  <input
-                    type="radio"
-                    id="basic"
-                    name="product"
-                    value="basic"
-                  />
-                  <label htmlFor="basic">Basic for $10</label>
-                  <br />
-                  <input type="radio" id="pro" name="product" value="pro" />
-                  <label htmlFor="pro">Pro for $12</label>
-                  <br />
-                  <button
-                    className="btn btn-primary"
-                    id="checkout-button"
-                    type="submit"
-                  >
-                    Buy now
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p className="lead">
-                    You are currently on the {customer.plan} plan
-                  </p>
-                  {customer.hasTrial ? (
-                    <p className="lead">
-                      Trial active until {customer.endDate}
-                    </p>
-                  ) : (
-                    <p className="lead">
-                      Trial inactive. Plan will end on {customer.endDate}
-                    </p>
-                  )}
-                  <hr />
-                  <p>You can access your content by clicking one of the buttons below.</p>
-                  <ul>  
-                    <li><a href="/none">None</a></li>  
-                    <li><a href="/basic">Basic</a></li>  
-                    <li><a href="/pro">Pro</a></li>  
-                  </ul>  
-                  <hr />  
-                  <p className="mt-4 text-muted">
-                    Not happy with your current plan? Cancel or Upgrade by
-                    clicking the button below.
-                  </p>
-                  <button
-                    className="btn btn-lg btn-primary"
-                    id="manage-billing-button"
-                    type="submit"
-                  >
-                    Manage Billing
-                  </button>
-                </>
-              )}
-            </>
+    <div className="flex flex-col min-h-screen">
+      <main className="flex-grow">
+        <div className="container mx-auto mt-10">
+          <h1 className="text-4xl mb-4">User Profile</h1>
+          <hr />
+          {user ? (
+            <div className="flex flex-row">
+              <div className="w-1/6">
+                <img
+                  src="https://lh3.googleusercontent.com/a-/AOh14GjSb0KZnfOv_wP8cT6M7wEoGMlpG1fFbsO1Uszm7lw=s96-c"
+                  className="w-full"
+                />
+              </div>
+              <div className="w-5/6 ml-4">
+                <h3 className="text-2xl">
+                  {user.firstName} {user.lastName} (#{user.id})
+                </h3>
+                <p>Logged in using {user.source}</p>
+                <p>{user.email}</p>
+                <p>Last visited on {user.lastVisited}</p>
+                <p>
+                  <a href="/auth/logout" className="text-blue-600">
+                    Logout
+                  </a>
+                </p>
+              </div>
+            </div>
           ) : (
-            <p>User does not exist in the database</p>
+            <h1 className="text-2xl">User not found</h1>
           )}
         </div>
       </main>
-      <footer className="footer mt-auto py-3">
-        <div className="container">
-          <span className="text-muted">
+
+      <footer className="mt-auto py-3">
+        <div className="container mx-auto">
+          <span className="text-gray-600">
             The full guide is available at{' '}
-            <a href="https://saasbase.dev/">saasbase.dev</a>
+            <a
+              href="https://saasbase.dev/"
+              className="text-blue-600"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              saasbase.dev
+            </a>
           </span>
         </div>
       </footer>
-      <script
-        src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-        crossOrigin="anonymous"
-      ></script>
-      <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
-        crossOrigin="anonymous"
-      ></script>
-      <script type="text/javascript" src="https://js.stripe.com/v3/"></script>
-      <script>{`var customer = ${JSON.stringify(customer)}; console.log(customer);`}</script>
-      <script type="text/javascript" src="./js/account.js"></script>
     </div>
   );
 };
 
-export default Account;
+export default Profile;

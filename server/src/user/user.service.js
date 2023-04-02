@@ -1,4 +1,4 @@
-import User from "./user.model.js";
+import User from "../user/user.model.js";
 
 const addGoogleUser =
   (User) =>
@@ -13,7 +13,6 @@ const addGoogleUser =
     });
     return user.save();
   };
-
 
 const addLocalUser =
   (User) =>

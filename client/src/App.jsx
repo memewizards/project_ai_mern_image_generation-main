@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 
 import { logo } from './assets';
-import { Home, CreatePost, ImageGenerator, UserLogin, Account, Signup } from './page';
+import { Home, CreatePost, ImageGenerator, UserLogin, Account, Signup, Profile } from './page';
 
 
 
@@ -29,6 +29,7 @@ const App = () => (
         <Route path="/UserLogin" element={<UserLogin />} />
         <Route path="/Account" element={<Account />} />
         <Route path="/Signup" element={<Signup />} />
+        <Route path= "/Profile" element={<Profile />} />
       </Routes>
     </main>
   </BrowserRouter>
