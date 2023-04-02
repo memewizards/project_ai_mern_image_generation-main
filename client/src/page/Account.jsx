@@ -1,24 +1,16 @@
-import React from 'react';
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { preview } from '../assets';
-import { FormField, Loader } from '../components';
-import useCustomer from '../hooks/useCustomer';
-import { Button } from 'react-bootstrap'; // import individual component
+import React, { useState, useEffect } from 'react';
+import useCustomer from "../hooks/useCustomer";
 
 const Account = () => {
   const [customer, setCustomer] = useState(null);
-  const { customerId } = useCustomer();
+  const account = useCustomer("http://localhost:8080/account");
 
   useEffect(() => {
-  if (customerId) {
-    fetch(`http://localhost:8080/api/customers/${customerId}`)
-      .then((res) => res.json())
-      .then((data) => setCustomer(data.customer))
-      .catch((error) => console.error(error));
-  }
-}, [customerId]);
-
+    if (account) {
+      setCustomer(account);
+    }
+  }, [account]);
+  
   return (
     <div className="d-flex flex-column h-100">
       {/* Begin page content */}

@@ -1,9 +1,9 @@
 // client/src/hooks/useCustomer.js
 import { useState, useEffect } from "react";
 
-async function fetchCustomer() {
+async function fetchData(endpoint) {
   try {
-    const res = await fetch("http://localhost:8080/profile", {
+    const res = await fetch(endpoint, {
       credentials: "include", // Make sure to include credentials
     });
 
@@ -13,22 +13,22 @@ async function fetchCustomer() {
     }
 
     const data = await res.json();
-    console.log("Fetched customer data:", data);
+    console.log("Fetched data:", data);
     return data.user;
   } catch (error) {
-    console.error("Failed to get customer data", error);
+    console.error("Failed to get data", error);
     return null;
   }
 }
 
-export default function useCustomer() {
-  const [customer, setCustomer] = useState(null);
+export default function useCustomer(endpoint) {
+  const [data, setData] = useState(null);
 
   useEffect(() => {
-    fetchCustomer().then((fetchedCustomer) => {
-      setCustomer(fetchedCustomer);
+    fetchData(endpoint).then((fetchedData) => {
+      setData(fetchedData);
     });
-  }, []);
+  }, [endpoint]);
 
-  return customer;
+  return data;
 }

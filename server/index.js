@@ -147,6 +147,15 @@ app.get("/profile", isLoggedIn, (req, res) => {
   }
 });
 
+app.get("/account", isLoggedIn, (req, res) => {
+  console.log("req.user:", req.user); // Add this line to log req.user
+  if (req.user) {
+    res.json({ user: req.user });
+  } else {
+    res.status(404).json({ message: "User not found" });
+  }
+});
+
 
 
 app.get("/auth/google", (req, res, next) => {

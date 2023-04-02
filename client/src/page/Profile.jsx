@@ -2,15 +2,14 @@ import React, { useState, useEffect } from 'react';
 import useCustomer from "../hooks/useCustomer";
 
 const Profile = () => {
-  const user = useCustomer();
-
+  const [user, setUser] = useState(null);
+  const profile = useCustomer("http://localhost:8080/profile");
 
   useEffect(() => {
-    fetch('/profile')
-      .then((res) => res.json())
-      .then((data) => setUser(data.user))
-      .catch((error) => console.error(error));
-  }, []);
+    if (profile) {
+      setUser(profile);
+    }
+  }, [profile]);
   
 
   return (
