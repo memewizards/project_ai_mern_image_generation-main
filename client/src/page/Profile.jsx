@@ -3,14 +3,45 @@ import useCustomer from "../hooks/useCustomer";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
-  const profile = useCustomer("http://localhost:8080/profile");
+  const [tokenBalance, setTokenBalance] = useState(0);
+  const profile = useCustomer("https://localhost:8080/profile");
 
   useEffect(() => {
     if (profile) {
       setUser(profile);
     }
   }, [profile]);
-  
+
+  useEffect(() => {
+    if (user) {
+      handleCheckBalance();
+    }
+  }, [user]); // Call handleCheckBalance when the user state is updated
+
+  const handleCheckBalance = () => {
+    const authToken = localStorage.getItem('authToken');
+
+    fetch(`http://localhost:8080/getTokenBalance?email=${user.email}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      },
+      credentials: 'include'
+    })
+      .then(response => response.json())
+      .then(data => {
+        const newBalance = parseInt(data.tokenBalance);
+        console.log(`New token balance: ${newBalance}`);
+        setTokenBalance(newBalance);
+        emitTokenBalanceUpdate(newBalance);
+      })
+      .catch(error => console.error(error));
+  };
+
+  const emitTokenBalanceUpdate = (newBalance) => {
+    const event = new CustomEvent("tokenBalanceUpdate", { detail: newBalance });
+    window.dispatchEvent(event);
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -33,6 +64,11 @@ const Profile = () => {
                 <p>Logged in using {user.source}</p>
                 <p>{user.email}</p>
                 <p>Last visited on {user.lastVisited}</p>
+                <p>Token Balance: {tokenBalance}</p> {/* Display the token balance */}
+                <button onClick={handleCheckBalance}>Check Token Balance</button>
+                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCheckBalance}>
+                  Check Token Balance
+                </button>
                 <p>
                   <a href="/auth/logout" className="text-blue-600">
                     Logout

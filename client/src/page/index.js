@@ -5,6 +5,9 @@ import UserLogin from './UserLogin';
 import Account from "./Account";
 import Signup from "./Signup";
 import Profile from "./Profile";
+import None from "./None";
+import BasicPlan from "./BasicPlan";
+import ProPlan from "./ProPlan";
 
 
 export {
@@ -14,6 +17,9 @@ export {
   UserLogin,
   Account,
   Signup,
-  Profile,
+  Profile, 
+  None,
+  BasicPlan,
+  ProPlan,
   
 };

@@ -20,7 +20,7 @@ const Authentication = () => {
             </a>
             <h1 className="h3 mb-3 font-weight-normal">Sign in with Email</h1>
             <p className="mb-3 text-muted">
-              Implement a local signin strategy using Passport.js and MongoDB
+              At this time only google login is available. 
             </p>
             <div className="text-left">
               <div className="form-group">

@@ -10,6 +10,7 @@ const Stripe = stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 const createCheckoutSession = async (customerID, price) => {
+  
   const session = await Stripe.checkout.sessions.create({
     mode: "subscription",
     payment_method_types: ["card"],
@@ -20,15 +21,14 @@ const createCheckoutSession = async (customerID, price) => {
         quantity: 1,
       },
     ],
-    subscription_data: {
-      trial_period_days: process.env.TRIAL_DAYS,
-    },
-
+    
     success_url: `${process.env.DOMAIN}?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${process.env.DOMAIN}`,
+    
   });
-
+  
   return session;
+  
 };
 
 const createBillingSession = async (customer) => {
@@ -54,6 +54,7 @@ const addNewCustomer = async (email) => {
 };
 
 const createWebhook = (rawBody, sig) => {
+  console.log("Inside createWebhook");
   const event = Stripe.webhooks.constructEvent(
     rawBody,
     sig,
@@ -61,6 +62,8 @@ const createWebhook = (rawBody, sig) => {
   );
   return event;
 };
+
+
 
 export default {
   getCustomerByID,

@@ -21,7 +21,9 @@ import * as GoogleStrategy from "./src/config/google.js";
 import * as LocalStrategy from "./src/config/local.js";
 import bodyParser from "body-parser";
 import flash from "connect-flash";
-
+import getRawBody from "raw-body";
+import https from "https";
+import fs from "fs";
 import cookieParser from "cookie-parser";
 import * as uuid from "uuid";
 import bcrypt from "bcrypt";
@@ -45,9 +47,13 @@ app.use(
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
-    allowedHeaders: "Content-Type, Authorization, X-Requested-With",
+    allowedHeaders: "Content-Type, Authorization, X-Requested-With, email",
   })
 );
+
+app.use("/webhook", bodyParser.raw({ type: "application/json" }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/api/v1/runpod", runPodRoutes);
 app.use("/api/v1/post", postRoutes);
@@ -98,6 +104,7 @@ app.get("/api/v1/getCustomerId", setCurrentUser, (req, res) => {
 });
 
 app.post("/userlogin", async (req, res) => {
+  console.log("User login request received");
   const { email } = req.body;
   const customer = await Stripe.addNewCustomer(email);
   if (customer && customer.id) {
@@ -126,6 +133,8 @@ app.get("/", (req, res) => {
   
 });
 
+
+
 // app.get("/", (req, res) => {
 //   res.render("index.ejs");
 // });
@@ -142,6 +151,7 @@ app.get("/profile", isLoggedIn, (req, res) => {
   console.log("req.user:", req.user); // Add this line to log req.user
   if (req.user) {
     res.json({ user: req.user });
+    console.log("this is the user. isLoggedIn is true")
   } else {
     res.status(404).json({ message: "User not found" });
   }
@@ -156,6 +166,85 @@ app.get("/account", isLoggedIn, (req, res) => {
   }
 });
 
+app.get("/getTokenBalance", isLoggedIn, async (req, res) => {
+  console.log("requested token balance");
+  console.log(req.user);
+
+  // make sure user is authenticated before proceeding
+  if (!req.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const { email } = req.query; // extract the email value from the query string
+
+  try {
+    const user = await UserService.getUserByEmail({ email });
+
+    if (!user) {
+      console.log(`app.js: Could not find user with email: ${email}`);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.status(200).json({ tokenBalance: user.tokenBalance }); // send the token balance back to the client
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal server error" });
+  }
+});
+
+
+
+// Route for adding tokens to a user's token balance
+app.post("/add-tokens", async (req, res) => {
+  console.log(req.user);
+  const { email, tokensToAdd } = req.body; // extract the email and tokensToAdd values from the request body
+
+  try {
+    const user = await UserService.getUserByEmail({ email });
+
+    if (!user) {
+      console.log(`app.js: Could not find user with email: ${email}`);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+
+    user.tokenBalance += tokensToAdd;
+    await user.save();
+
+    res.send({ success: true, user }); // send a response to the client indicating success
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal server error" });
+  }
+});
+
+// Route for subtracting tokens from a user's token balance
+app.post('/subtract-tokens', async (req, res) => {
+  console.log(req.user)
+  const { email, tokensToSubtract } = req.body; // extract the email and tokensToSubtract values from the request body
+
+  try {
+    const user = await UserService.getUserByEmail({ email });
+
+    if (!user) {
+      console.log(`app.js: Could not find user with email: ${email}`);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.tokenBalance < tokensToSubtract) {
+      return res.status(403).send({ error: "Insufficient tokens" });
+    }
+
+    user.tokenBalance -= tokensToSubtract;
+    await user.save();
+
+    res.send({ success: true, user }); // send a response to the client indicating success
+  }
+  catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal server error" });
+  }
+});
 
 
 app.get("/auth/google", (req, res, next) => {
@@ -197,15 +286,15 @@ app.get(
 );
 
 app.get(
-  "/basic",
-  [setCurrentUser, hasPlan("basic")],
+  "/BasicPlan",
+  [setCurrentUser, hasPlan("BasicPlan")],
   async function (req, res, next) {
-    res.status(200).render("basic.ejs");
+    res.status(200).render("BasicPlan.ejs");
   }
 );
 
 app.get(
-  "/pro",
+  "/ProPlan",
   [setCurrentUser, hasPlan("pro")],
   async function (req, res, next) {
     res.status(200).render("pro.ejs");
@@ -226,23 +315,25 @@ app.get("/api/v1/account", async function (req, res) {
   }
 });
 
+const productToPriceMap = {
+  basic: process.env.PRODUCT_BASIC,
+  pro: process.env.PRODUCT_PRO,
+};
+
 app.post("/checkout", setCurrentUser, async (req, res) => {
-  const customer = req.user;
+  console.log("Checkout route hit");
+
+  const user = req.user;
   const { product, customerID } = req.body;
+
+  console.log("User:", user);
+  console.log("Product:", product);
+  console.log("CustomerID:", customerID);
 
   const price = productToPriceMap[product];
 
   try {
     const session = await Stripe.createCheckoutSession(customerID, price);
-
-    const ms =
-      new Date().getTime() + 1000 * 60 * 60 * 24 * process.env.TRIAL_DAYS;
-    const n = new Date(ms);
-
-    customer.plan = product;
-    customer.hasTrial = true;
-    customer.endDate = n;
-    customer.save();
 
     res.send({
       sessionId: session.id,
@@ -258,6 +349,9 @@ app.post("/checkout", setCurrentUser, async (req, res) => {
   }
 });
 
+
+
+
 app.post("/billing", setCurrentUser, async (req, res) => {
   const { customer } = req.body;
   console.log("customer", customer);
@@ -269,15 +363,20 @@ app.post("/billing", setCurrentUser, async (req, res) => {
 });
 
 app.post("/webhook", async (req, res) => {
-  let event;
+  console.log("Webhook received");
+  console.log("Request headers:", req.headers);
 
+  let event;
   try {
+    console.log("Trying to create webhook");
+    console.log("About to call createWebhook function");
     event = Stripe.createWebhook(req.body, req.header("Stripe-Signature"));
+    console.log("Webhook created");
   } catch (err) {
-    console.log(err);
+    console.log("Error constructing webhook event:", err.message);
     return res.sendStatus(400);
   }
-
+  console.log("Processing event:", event.type);
   const data = event.data.object;
 
   console.log(event.type, data);
@@ -308,6 +407,8 @@ app.post("/webhook", async (req, res) => {
       break;
     }
     case "customer.subscription.updated": {
+      // started trial
+      console.log("customer.subscription.updated");
       const user = await UserService.getUserByBillingID(data.customer);
 
       if (data.plan.id == process.env.PRODUCT_BASIC) {
@@ -331,6 +432,7 @@ app.post("/webhook", async (req, res) => {
       }
 
       if (data.canceled_at) {
+        // cancelled
         console.log("You just canceled the subscription" + data.canceled_at);
         user.plan = "none";
         user.hasTrial = false;
@@ -344,15 +446,22 @@ app.post("/webhook", async (req, res) => {
     }
     default:
   }
-  res.sendStatus(200);
+  res.status(200);
 });
+
 
 
 // Get the equivalent of __dirname
 const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-
+const server = https.createServer(
+  {
+    key: fs.readFileSync(path.join(__dirname, "localhost-key.pem")),
+    cert: fs.readFileSync(path.join(__dirname, "localhost.pem")),
+  },
+  app
+);
 
 const startServer = async () => {
   try {

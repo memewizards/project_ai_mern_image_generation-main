@@ -11,7 +11,7 @@ const Signup = () => {
       password: password.value,
     };
 
-    fetch('http://localhost:8080/auth/local/signup', {
+    fetch('api/auth/local/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newUser),
@@ -43,7 +43,7 @@ const Signup = () => {
             </p>
 
             <p className="text-center mb-4">
-              <a className="text-blue-500 hover:text-blue-700" href="http://localhost:8080/auth/google">
+              <a className="text-blue-500 hover:text-blue-700" href="/auth/google">
                 Sign in using Google →
               </a>
             </p>
