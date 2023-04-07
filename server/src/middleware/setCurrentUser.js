@@ -1,10 +1,14 @@
 import UserService from "../user/user.service.js";
 
-
-
 const setCurrentUser = async (req, res, next) => {
   console.log("Reached setCurrentUser middleware");
   console.log("Request headers received:", req.headers);
+
+  if (!req.session) {
+    console.log("Session object is undefined");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+
   console.log("Session email:", req.session.email);
   const { email } = req.headers;
 
@@ -29,3 +33,4 @@ const setCurrentUser = async (req, res, next) => {
   }
 };
 export default setCurrentUser;
+

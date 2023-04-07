@@ -2,10 +2,17 @@ import express from "express";
 import * as dotenv from "dotenv";
 import fetch from "node-fetch";
 import { EventEmitter } from "events";
+import UserService from "../src/user/user.service.js";
+import setCurrentUser from "../src/middleware/setCurrentUser.js";
+import { debug } from "console";
+// Inside the router.post("/", async (req, res) => { ... });
+
 
 dotenv.config();
 
 const router = express.Router();
+
+
 
 router.post("/", async (req, res) => {
   try {
@@ -15,7 +22,7 @@ router.post("/", async (req, res) => {
 
     // Get prompt and negative_prompt from the request
     const { prompt, negative_prompt } = req.body;
-
+    
     const input = {
       input: {
         prompt: prompt.trim(),
@@ -30,64 +37,88 @@ router.post("/", async (req, res) => {
         batch_size: req.body.batch_size,
       },
     };
-
+    
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.RUNPOD_API_KEY}`,
     };
-
-    const checkStatus = async (jobId) => {
+    
+    const checkStatus = async (jobId, userEmail) => {
+      
       const statusEndpoint = `${status_endpoint_template}${jobId}`;
       try {
         const statusResponse = await fetch(statusEndpoint, { headers });
         const statusJson = await statusResponse.json();
         const status = statusJson.status;
-    
+
         console.log(`[${status}]`);
-        console.log(status_endpoint_template)
+        console.log(status_endpoint_template);
         console.log("Request Body:", JSON.stringify(input, null, 2));
-    
+
         if (status === "COMPLETED") {
           const output = statusJson.output;
           const images = [];
-    
+
           for (let i = 0; i < output.images.length; i++) {
             const imageString = output.images[i];
             images.push(imageString); // Add the base64 image data to the images array
           }
-    
+
           res.json({ images }); // Send the images array back to the client
-          // console.log("what was sent to the client:");
-          //console.log({ images });
+
+          try {
+            const tokensToSubtract = 0.5; // You can set this value according to your application logic
+            const authToken = req.headers.authorization;
+
+            await fetch(`http://localhost:8080/subtract-tokens`, {
+              method: "POST",
+              headers: {
+                Authorization: authToken,
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+              body: JSON.stringify({
+                email: userEmail,
+                tokensToSubtract: tokensToSubtract,
+              }),
+            });
+
+            console.log(`Tokens subtracted: ${tokensToSubtract}`);
+          } catch (error) {
+            console.error("Error while subtracting tokens:", error);
+          }
         } else if (status === "FAILED") {
           res.send("The job failed. Tokens are returned to your balance."); // Return a message to the client if the job failed
         } else {
-          setTimeout(() => checkStatus(jobId), 1000);
+          setTimeout(() => checkStatus(jobId, userEmail), 1000);
         }
       } catch (error) {
         console.error("There was an error:", error);
         res.status(500).send(error.message);
       }
     };
-    
-    const response = await fetch(run_endpoint, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(input),
-    });
 
-    const responseData = await response.json();
-    const jobId = responseData.id;
+try {
+  const response = await fetch(run_endpoint, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(input),
+  });
 
-    if (!jobId) {
-      throw new Error("Job ID not found");
-    }
+  const responseData = await response.json();
+  const jobId = responseData.id;
 
-    checkStatus(jobId);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send(error.message);
+  if (!jobId) {
+    throw new Error("Job ID not found");
   }
-});
+
+  const userEmail = req.user.email; // Get the user email from the request user object
+  checkStatus(jobId, userEmail); // Pass the userEmail to the checkStatus function
+} catch (error) {
+  console.error(error);
+  res.status(500).send(error.message);
+}
+
+} catch (error) { console.error(error); res.status(500).send(error.message); }  });
 
 export default router;

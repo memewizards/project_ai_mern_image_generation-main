@@ -53,13 +53,27 @@ const getUserByEmail = (User) => async (emailOrObj) => {
   return user;
 };
 
-const getUserByBillingID = (User) => async (rsbillingID) => {
+const getUserByBillingID = (User) => async (billingID) => {
   return await User.findOne({ billingID });
 };
 
 const updatePlan = (User) => (email, plan) => {
   return User.findOneAndUpdate({ email, plan });
 };
+
+const subtractTokens = (User) => (email, tokensToSubtract) => async () => {
+  
+  if (User) {
+    User.tokenBalance -= tokensToSubtract;
+    // If the balance goes negative, set it to zero
+    if (User.tokenBalance < 0) {
+      User.tokenBalance = 0;
+    }
+    await User.save();
+  } else {
+    throw new Error(`User with email ${email} not found`);
+  }
+}
 
 const UserService = {
   addGoogleUser: addGoogleUser(User),
@@ -69,6 +83,7 @@ const UserService = {
   getUserByEmail: getUserByEmail(User),
   updatePlan: updatePlan(User),
   getUserByBillingID: getUserByBillingID(User),
+  subtractTokens: subtractTokens(User),
 };
 
 export default UserService;

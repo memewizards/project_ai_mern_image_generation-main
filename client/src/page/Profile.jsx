@@ -16,7 +16,33 @@ const Profile = () => {
     if (user) {
       handleCheckBalance();
     }
-  }, [user]); // Call handleCheckBalance when the user state is updated
+  }, [user]);
+
+  const handleSubtractTokens = (numTokens) => {
+    const authToken = localStorage.getItem("authToken");
+
+  fetch(`http://localhost:8080/subtract-tokens`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${authToken}`,
+      "Content-Type": "application/json"
+    },
+    credentials: "include",
+    body: JSON.stringify({
+      email: user.email,
+      tokensToSubtract: numTokens
+    })
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      const newBalance = parseFloat(data.user.tokenBalance);
+      console.log(`New token balance: ${newBalance}`);
+      setTokenBalance(newBalance);
+      emitTokenBalanceUpdate(newBalance);
+    })
+    .catch((error) => console.error(error));
+};
+
 
   const handleCheckBalance = () => {
     const authToken = localStorage.getItem('authToken');
@@ -30,7 +56,7 @@ const Profile = () => {
     })
       .then(response => response.json())
       .then(data => {
-        const newBalance = parseInt(data.tokenBalance);
+        const newBalance = parseFloat(data.tokenBalance);
         console.log(`New token balance: ${newBalance}`);
         setTokenBalance(newBalance);
         emitTokenBalanceUpdate(newBalance);
@@ -64,11 +90,24 @@ const Profile = () => {
                 <p>Logged in using {user.source}</p>
                 <p>{user.email}</p>
                 <p>Last visited on {user.lastVisited}</p>
-                <p>Token Balance: {tokenBalance}</p> {/* Display the token balance */}
+                <p>Token Balance: {parseFloat(tokenBalance).toFixed(3)}</p>
+                
                 <button onClick={handleCheckBalance}>Check Token Balance</button>
                 <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCheckBalance}>
                   Check Token Balance
                 </button>
+                  <button
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    onClick={() => handleSubtractTokens(0.1)} // Pass the number of tokens to subtract
+                  >
+                    Subtract 5 Tokens
+                  </button>
+                  <button
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    onClick={() => handleSubtractTokens(1)} // Pass the number of tokens to subtract
+                  >
+                    Subtract Tokens
+                  </button>
                 <p>
                   <a href="/auth/logout" className="text-blue-600">
                     Logout

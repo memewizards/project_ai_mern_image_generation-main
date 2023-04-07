@@ -51,6 +51,42 @@ const Account = () => {
   stripe.redirectToCheckout({ sessionId });
  };
 
+const handleManageBilling = async (event) => {
+  event.preventDefault();
+
+  if (!customer) return;
+
+  try {
+    const requestOptions = {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    email: customer.email,
+    // Add the following headers to enable CORS
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Origin, Content-Type, X-Auth-Token",
+  },
+      body: JSON.stringify({
+        customer: customer.billingID,
+      }),
+    };
+    
+    const response = await fetch("http://localhost:8080/billing", requestOptions);
+    const result = await response.json();
+    window.location.replace(result.url);
+
+    // Add the following line to redirect the user to the Stripe billing page
+    window.location.href = 'https://billing.stripe.com/p/login/test_3csdU4cnx1S41mo288';
+
+  } catch (error) {
+    console.error("Error in handleManageBilling:", error);
+  }
+};
+
+
+
+
 
   if (!customer) {
     return <div>Loading...</div>;
@@ -153,9 +189,11 @@ const Account = () => {
                   className="btn btn-lg btn-primary py-2 px-6 bg-blue-600 text-white font-semibold rounded"
                   id="manage-billing-button"
                   type="submit"
+                  onClick={handleManageBilling}
                 >
                   Manage Billing
                 </button>
+
               </> 
             )}
           </>

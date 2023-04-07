@@ -47,7 +47,7 @@ app.use(
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
-    allowedHeaders: "Content-Type, Authorization, X-Requested-With, email",
+    allowedHeaders: "Content-Type, Authorization, X-Requested-With, email,",
   })
 );
 
@@ -79,18 +79,19 @@ app.use(
   })
 );
 
-app.use(cookieParser());
-app.use(
-  session({
-    secret: "secr3t",
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use((req, res, next) => {
+  if (!req.session) {
+    console.error("Session initialization failed");
+    return res.status(500).json({ error: "Internal server error" });
+  }
+  next();
+});
+
+
 
 app.get("/api/v1/getCustomerId", setCurrentUser, (req, res) => {
   console.log("Session:", req.session);
@@ -271,6 +272,9 @@ app.get("/auth/google/callback", (req, res, next) => {
         console.log(err);
         return next(err);
       }
+      req.session.email = user.email;
+      console.log("Session after login:", req.session);
+
       return res.redirect("http://localhost:5173/profile");
     });
   })(req, res, next);
@@ -352,15 +356,29 @@ app.post("/checkout", setCurrentUser, async (req, res) => {
 
 
 
+
 app.post("/billing", setCurrentUser, async (req, res) => {
-  const { customer } = req.body;
-  console.log("customer", customer);
+  try {
+    // const userEmail = req.user.email;
+    // const user = await UserService.getUserByEmail(userEmail);
 
-  const session = await Stripe.createBillingSession(customer);
-  console.log("session", session);
+    // const customerId = user.customerID; // Get the customer ID from the user object
+    // console.log("customer ID", customerId);
 
-  res.json({ url: session.url });
+    // const session = await Stripe.createBillingSession(customerId); // Pass the customer ID to createBillingSession
+    // console.log("session", session);
+
+    res.redirect('https://billing.stripe.com/p/login/test_3csdU4cnx1S41mo288'); // Redirect to the provided link
+
+  } catch (error) {
+    console.error("Error in /billing route:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
+
+
+
+
 
 app.post("/webhook", async (req, res) => {
   console.log("Webhook received");

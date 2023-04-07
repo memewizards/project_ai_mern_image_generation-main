@@ -37,6 +37,12 @@ const App = () => {
     }
   }, [user]);
 
+    useEffect(() => {
+    if (user) {
+      handleSubtractTokens();
+    }
+  }, [user]);
+
   const handleCheckBalance = () => {
     const authToken = localStorage.getItem("authToken");
 
@@ -49,17 +55,45 @@ const App = () => {
     })
       .then((response) => response.json())
       .then((data) => {
-      const newBalance = parseInt(data.tokenBalance);
+      const newBalance = parseFloat(data.tokenBalance);
       console.log(`New token balance: ${newBalance}`);
       emitTokenBalanceUpdate(newBalance);
       })
       .catch((error) => console.error(error));
   };
 
+    const handleSubtractTokens = (numTokens) => {
+  const authToken = localStorage.getItem("authToken");
+
+ fetch(`http://localhost:8080/subtract-tokens`, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${authToken}`,
+    "Content-Type": "application/json",
+  },
+  credentials: "include",
+  body: JSON.stringify({
+    email: user.email,
+    tokensToSubtract: numTokens,
+  }),
+})
+  .then((response) => response.json())
+  .then((data) => {
+    const newBalance = parseFloat(data.tokenBalance);
+    console.log(`New token balance: ${newBalance}`);
+    emitTokenBalanceUpdate(newBalance);
+  })
+  .catch((error) => console.error(error));
+};
+
+
+
+
 const emitTokenBalanceUpdate = (newBalance) => {
     const event = new CustomEvent("tokenBalanceUpdate", { detail: newBalance });
     window.dispatchEvent(event);
   };
+
 
   
 
@@ -88,7 +122,7 @@ const emitTokenBalanceUpdate = (newBalance) => {
     >
       <img src={profileIcon} alt="profile" className="w-6 h-6" />
     </button>
-    <p>Tokens available: {tokenBalance}</p>
+    <p>Tokens available: {parseFloat(tokenBalance).toFixed(3)}</p>
     {showDropdown && (
           <div className="absolute top-10 left-0 bg-white border border-gray-300 rounded-md shadow-lg">
             <Link
@@ -131,6 +165,7 @@ const emitTokenBalanceUpdate = (newBalance) => {
           <Route path="/ProPlan" element={<ProPlan />} />
           <Route path="/None" element={<None />} />
           <Route path="/checkout" element={<checkout />} />
+          <Route path="/createBillingSession" element={<createBillingSession />} />
         </Routes>
       </main>
     </BrowserRouter>
