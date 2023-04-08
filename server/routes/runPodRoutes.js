@@ -43,8 +43,7 @@ router.post("/", async (req, res) => {
       Authorization: `Bearer ${process.env.RUNPOD_API_KEY}`,
     };
     
-    const checkStatus = async (jobId, userEmail) => {
-      
+    const checkStatus = async (jobId, userEmail, startTime = Date.now()) => {
       const statusEndpoint = `${status_endpoint_template}${jobId}`;
       try {
         const statusResponse = await fetch(statusEndpoint, { headers });
@@ -66,8 +65,11 @@ router.post("/", async (req, res) => {
 
           res.json({ images }); // Send the images array back to the client
 
+          const elapsedTime = (Date.now() - startTime) / 1000;
+          const baseTokens = 4;
+          const tokensToSubtract = baseTokens + elapsedTime * 0.001;
+
           try {
-            const tokensToSubtract = 0.5; // You can set this value according to your application logic
             const authToken = req.headers.authorization;
 
             await fetch(`http://localhost:8080/subtract-tokens`, {
@@ -90,13 +92,14 @@ router.post("/", async (req, res) => {
         } else if (status === "FAILED") {
           res.send("The job failed. Tokens are returned to your balance."); // Return a message to the client if the job failed
         } else {
-          setTimeout(() => checkStatus(jobId, userEmail), 1000);
+          setTimeout(() => checkStatus(jobId, userEmail, startTime), 1000);
         }
       } catch (error) {
         console.error("There was an error:", error);
         res.status(500).send(error.message);
       }
     };
+
 
 try {
   const response = await fetch(run_endpoint, {

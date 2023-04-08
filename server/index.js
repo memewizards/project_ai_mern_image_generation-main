@@ -28,6 +28,8 @@ import cookieParser from "cookie-parser";
 import * as uuid from "uuid";
 import bcrypt from "bcrypt";
 import "./src/config/google.js";
+import jwt from "jsonwebtoken";
+
 
 import customerRoutes from "./routes/customerRoutes.js";
 
@@ -55,7 +57,11 @@ app.use("/webhook", bodyParser.raw({ type: "application/json" }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use("/api/v1/runpod", runPodRoutes);
+app.use(
+  "/api/v1/runpod",
+  passport.authenticate("jwt", { session: false }),
+  runPodRoutes
+);
 app.use("/api/v1/post", postRoutes);
 app.use("/api/v1/dalle", dalleRoutes);
 app.use("/userLogin", userLoginRoutes);
@@ -223,7 +229,7 @@ app.post("/add-tokens", async (req, res) => {
 app.post('/subtract-tokens', async (req, res) => {
   console.log(req.user)
   const { email, tokensToSubtract } = req.body; // extract the email and tokensToSubtract values from the request body
-
+  
   try {
     const user = await UserService.getUserByEmail({ email });
 
@@ -275,7 +281,17 @@ app.get("/auth/google/callback", (req, res, next) => {
       req.session.email = user.email;
       console.log("Session after login:", req.session);
 
-      return res.redirect("http://localhost:5173/profile");
+      // Create and sign the JWT token
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "7d",
+        }
+      );
+
+      // Redirect to the client-side, passing the JWT token as a query parameter
+      return res.redirect(`http://localhost:5173/profile?token=${token}`);
     });
   })(req, res, next);
 });

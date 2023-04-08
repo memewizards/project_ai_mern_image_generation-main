@@ -24,11 +24,15 @@ const UserLogin = () => {
 
       if (response.ok) {
         const data = await response.json();
+
+        // Set the JWT token in the local storage
+        localStorage.setItem('authToken', data.token);
+
         const customerId = data.customerId;
         navigate(`/account/${customerId}`);
       } else {
         // handle error responses here
-        console.log("else has occured" + error);
+        console.log("else has occurred" + error);
       }
     } catch (error) {
       // handle network errors here

@@ -7,6 +7,13 @@ const Profile = () => {
   const profile = useCustomer("https://localhost:8080/profile");
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+
+    if (token) {
+      localStorage.setItem("authToken", token);
+    }
+
     if (profile) {
       setUser(profile);
     }
@@ -20,29 +27,29 @@ const Profile = () => {
 
   const handleSubtractTokens = (numTokens) => {
     const authToken = localStorage.getItem("authToken");
+    console.log("the auth token is: ", authToken)
 
-  fetch(`http://localhost:8080/subtract-tokens`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${authToken}`,
-      "Content-Type": "application/json"
-    },
-    credentials: "include",
-    body: JSON.stringify({
-      email: user.email,
-      tokensToSubtract: numTokens
+    fetch(`http://localhost:8080/subtract-tokens`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        "Content-Type": "application/json"
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        email: user.email,
+        tokensToSubtract: numTokens
+      })
     })
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      const newBalance = parseFloat(data.user.tokenBalance);
-      console.log(`New token balance: ${newBalance}`);
-      setTokenBalance(newBalance);
-      emitTokenBalanceUpdate(newBalance);
-    })
-    .catch((error) => console.error(error));
-};
-
+      .then((response) => response.json())
+      .then((data) => {
+        const newBalance = parseFloat(data.user.tokenBalance);
+        console.log(`New token balance: ${newBalance}`);
+        setTokenBalance(newBalance);
+        emitTokenBalanceUpdate(newBalance);
+      })
+      .catch((error) => console.error(error));
+  };
 
   const handleCheckBalance = () => {
     const authToken = localStorage.getItem('authToken');
@@ -68,6 +75,8 @@ const Profile = () => {
     const event = new CustomEvent("tokenBalanceUpdate", { detail: newBalance });
     window.dispatchEvent(event);
   };
+
+  
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -100,13 +109,13 @@ const Profile = () => {
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                     onClick={() => handleSubtractTokens(0.1)} // Pass the number of tokens to subtract
                   >
-                    Subtract 5 Tokens
+                    Subtract .1 Token
                   </button>
                   <button
                     className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
                     onClick={() => handleSubtractTokens(1)} // Pass the number of tokens to subtract
                   >
-                    Subtract Tokens
+                    Subtract 1 Token
                   </button>
                 <p>
                   <a href="/auth/logout" className="text-blue-600">

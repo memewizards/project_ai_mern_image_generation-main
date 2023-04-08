@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { preview } from '../assets';
 import { getRandomPrompt } from '../utils';
 import { FormField, Loader } from '../components';
+import useCustomer from "../hooks/useCustomer";
 import fs from 'fs';
 import path from 'path';
 
@@ -126,11 +127,19 @@ const generateImage = async () => {
     try {
       setGeneratingImg(true);
 
+      const authToken = localStorage.getItem('authToken');
+      console.log('Token from local storage:', authToken);
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      };
+
+      console.log('Request headers:', headers);
+
       const response = await fetch('http://localhost:8080/api/v1/runpod', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({
           prompt: form.prompt,
           negative_prompt: form.negativePrompt,
@@ -177,6 +186,7 @@ const generateImage = async () => {
     alert('Please provide proper prompt');
   }
 };
+
 
 
   const SliderInput = ({ label, name, min, max, value, step, onChange }) => {
