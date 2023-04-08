@@ -204,8 +204,11 @@ app.get("/getTokenBalance", isLoggedIn, async (req, res) => {
 // Route for adding tokens to a user's token balance
 app.post("/add-tokens", async (req, res) => {
   console.log(req.user);
-  const { email, tokensToAdd } = req.body; // extract the email and tokensToAdd values from the request body
+  const { email, tokensToAdd } = req.body;
 
+  if (typeof tokensToAdd !== "number" || isNaN(tokensToAdd)) {
+    return res.status(400).send({ error: "Invalid tokensToAdd value" });
+  }
   try {
     const user = await UserService.getUserByEmail({ email });
 
@@ -214,9 +217,8 @@ app.post("/add-tokens", async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-
     user.tokenBalance += tokensToAdd;
-    await user.save();
+    await user.save();Df
 
     res.send({ success: true, user }); // send a response to the client indicating success
   } catch (error) {
@@ -226,16 +228,19 @@ app.post("/add-tokens", async (req, res) => {
 });
 
 // Route for subtracting tokens from a user's token balance
-app.post('/subtract-tokens', async (req, res) => {
-  console.log(req.user)
-  const { email, tokensToSubtract } = req.body; // extract the email and tokensToSubtract values from the request body
-  
+app.post("/subtract-tokens", async (req, res) => {
+  console.log(req.user);
+  const { email, tokensToSubtract } = req.body;
+
+  if (typeof tokensToSubtract !== "number" || isNaN(tokensToSubtract)) {
+    return res.status(400).send({ error: "Invalid tokensToSubtract value" });
+  }
   try {
     const user = await UserService.getUserByEmail({ email });
 
     if (!user) {
       console.log(`app.js: Could not find user with email: ${email}`);
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
     if (user.tokenBalance < tokensToSubtract) {
@@ -246,8 +251,7 @@ app.post('/subtract-tokens', async (req, res) => {
     await user.save();
 
     res.send({ success: true, user }); // send a response to the client indicating success
-  }
-  catch (error) {
+  } catch (error) {
     console.error(error);
     res.status(500).send({ error: "Internal server error" });
   }
@@ -368,8 +372,6 @@ app.post("/checkout", setCurrentUser, async (req, res) => {
     });
   }
 });
-
-
 
 
 

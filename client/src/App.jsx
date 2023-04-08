@@ -122,7 +122,7 @@ const emitTokenBalanceUpdate = (newBalance) => {
     >
       <img src={profileIcon} alt="profile" className="w-6 h-6" />
     </button>
-    <p>Tokens available: {parseFloat(tokenBalance).toFixed(3)}</p>
+<p>Tokens available: {typeof tokenBalance === "number" && !isNaN(tokenBalance) ? parseFloat(tokenBalance).toFixed(3) : "0.000"}</p>
     {showDropdown && (
           <div className="absolute top-10 left-0 bg-white border border-gray-300 rounded-md shadow-lg">
             <Link
