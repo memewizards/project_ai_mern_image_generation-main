@@ -38,10 +38,9 @@ import customerRoutes from "./routes/customerRoutes.js";
 
 dotenv.config();
 const app = express();
-app.use(express.json({ limit: "50mb" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+//app.use(cookieParser());
 app.use(flash());
 app.use("/posts", postRoutes);
 app.use(
@@ -53,9 +52,7 @@ app.use(
   })
 );
 
-app.use("/webhook", bodyParser.raw({ type: "application/json" }));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+
 
 app.use(
   "/api/v1/runpod",
@@ -98,6 +95,17 @@ app.use((req, res, next) => {
 });
 
 
+
+// app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended: true }));
+app.use("/webhook", express.raw({ type: "application/json" }));
+app.use(
+  bodyParser.json({
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
 
 app.get("/api/v1/getCustomerId", setCurrentUser, (req, res) => {
   console.log("Session:", req.session);
@@ -396,22 +404,29 @@ app.post("/billing", setCurrentUser, async (req, res) => {
 
 
 
-
+console.log("Defining /webhook route");
 
 app.post("/webhook", async (req, res) => {
-  console.log("Webhook received");
-  console.log("Request headers:", req.headers);
-
+  console.log("Inside /webhook route");
+  const sig = req.headers["Stripe-Signature"] || req.header("Stripe-Signature");
   let event;
+
   try {
     console.log("Trying to create webhook");
-    console.log("About to call createWebhook function");
-    event = Stripe.createWebhook(req.body, req.header("Stripe-Signature"));
-    console.log("Webhook created");
+    console.log("About to call constructEvent function");
+    console.log("Project A - req.body:", req.body);
+    console.log("Project A - Stripe-Signature header:", sig);
+
+    // Convert the object to a raw body
+    const rawBody = JSON.stringify(req.body);
+    console.log("the converted raw body is", rawBody)
+    // Pass the raw body to the Stripe.createWebhook function
+    event = Stripe.createWebhook(rawBody, sig);
   } catch (err) {
-    console.log("Error constructing webhook event:", err.message);
+    console.log(err);
     return res.sendStatus(400);
   }
+
   console.log("Processing event:", event.type);
   const data = event.data.object;
 
@@ -482,8 +497,9 @@ app.post("/webhook", async (req, res) => {
     }
     default:
   }
-  res.status(200);
+  res.sendStatus(200);
 });
+
 
 
 

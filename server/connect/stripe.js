@@ -1,4 +1,4 @@
-import express from "express";
+
 import * as dotenv from "dotenv";
 import stripe from 'stripe';
 
@@ -54,13 +54,13 @@ const addNewCustomer = async (email) => {
 };
 
 const createWebhook = (rawBody, sig) => {
-  console.log("Inside createWebhook");
+  console.log("inside createWebhook")
   const event = Stripe.webhooks.constructEvent(
     rawBody,
     sig,
     process.env.STRIPE_WEBHOOK_SECRET
-  );
-  return event;
+  )
+  return event
 };
 
 
