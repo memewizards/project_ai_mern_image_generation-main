@@ -2,6 +2,7 @@
 import * as dotenv from "dotenv";
 import stripe from 'stripe';
 
+
 dotenv.config();
 
 const Stripe = stripe(process.env.STRIPE_SECRET_KEY, {
@@ -54,15 +55,19 @@ const addNewCustomer = async (email) => {
 };
 
 const createWebhook = (rawBody, sig) => {
-  console.log("inside createWebhook")
+   console.log("inside createWebhook");
+   console.log("Raw Body:", rawBody.toString());
+   console.log("Stripe-Signature Header:", sig);
+   console.log("Webhook Secret:", process.env.STRIPE_WEBHOOK_SECRET);
+
+
   const event = Stripe.webhooks.constructEvent(
     rawBody,
     sig,
     process.env.STRIPE_WEBHOOK_SECRET
-  )
-  return event
+  );
+  return event;
 };
-
 
 
 export default {
