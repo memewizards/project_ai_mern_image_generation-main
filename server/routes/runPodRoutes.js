@@ -1,10 +1,7 @@
 import express from "express";
 import * as dotenv from "dotenv";
 import fetch from "node-fetch";
-import { EventEmitter } from "events";
-import UserService from "../src/user/user.service.js";
-import setCurrentUser from "../src/middleware/setCurrentUser.js";
-import { debug } from "console";
+
 // Inside the router.post("/", async (req, res) => { ... });
 
 

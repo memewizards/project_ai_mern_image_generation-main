@@ -29,9 +29,6 @@ import * as uuid from "uuid";
 import bcrypt from "bcrypt";
 import "./src/config/google.js";
 import jwt from "jsonwebtoken";
-import webhookRoutes from "./routes/webhookRoutes.js";
-
-
 
 import customerRoutes from "./routes/customerRoutes.js";
 
@@ -40,6 +37,122 @@ import customerRoutes from "./routes/customerRoutes.js";
 
 dotenv.config();
 const app = express();
+const router = express.Router();
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+router.post(
+  "/",
+  express.raw({ type: "application/json" }),
+  async (request, response) => {
+    let event = request.body;
+    console.log(JSON.stringify(request.body));
+
+    if (endpointSecret) {
+      const signature = request.headers["stripe-signature"];
+      try {
+        event = Stripe.createWebhook(request.body, signature);
+      } catch (err) {
+        console.log(`⚠️  Webhook signature verification failed.`, err.message);
+        return response.sendStatus(400);
+      }
+    }
+
+    const data = event.data.object;
+    console.log(event.type, data);
+
+    switch (event.type) {
+      case "customer.created":
+        console.log(JSON.stringify(data));
+        break;
+
+      case "invoice.paid":
+        break;
+
+      case "customer.subscription.created": {
+        const user = await UserService.getUserByBillingID(data.customer);
+
+        if (!user) {
+          console.log(`User not found for billing ID ${data.customer}`);
+          return response.sendStatus(400);
+        }
+
+        if (data.plan.id === process.env.PRODUCT_BASIC) {
+          console.log("You are talking about basic product");
+          user.plan = "basic";
+        }
+
+        if (data.plan.id === process.env.PRODUCT_PRO) {
+          console.log("You are talking about pro product");
+          user.plan = "pro";
+        }
+
+        user.hasTrial = true;
+        user.endDate = new Date(data.current_period_end * 1000);
+
+        await user.save();
+
+        break;
+      }
+
+      case "customer.subscription.updated": {
+        const user = await UserService.getUserByBillingID(data.customer);
+
+        if (!user) {
+          console.log(`User not found for billing ID ${data.customer}`);
+          return response.sendStatus(400);
+        }
+
+        if (data.plan.id == process.env.PRODUCT_BASIC) {
+          console.log("You are talking about basic product");
+          user.plan = "basic";
+        }
+
+        if (data.plan.id === process.env.PRODUCT_PRO) {
+          console.log("You are talking about pro product");
+          user.plan = "pro";
+        }
+
+        const isOnTrial = data.status === "trialing";
+
+        if (isOnTrial) {
+          user.hasTrial = true;
+          user.endDate = new Date(data.current_period_end * 1000);
+        } else if (data.status === "active") {
+          user.hasTrial = false;
+          user.endDate = new Date(data.current_period_end * 1000);
+        }
+
+        if (data.canceled_at) {
+          console.log("You just canceled the subscription" + data.canceled_at);
+          user.plan = "none";
+          user.hasTrial = false;
+          user.endDate = null;
+        }
+
+        console.log(
+          "actual",
+          user.hasTrial,
+          data.current_period_end,
+          user.plan
+        );
+
+        await user.save();
+
+        console.log("customer changed", JSON.stringify(data));
+
+        break;
+      }
+
+      default:
+        break;
+    }
+
+    response.sendStatus(200);
+  }
+);
+
+
+app.use("/webhook", router);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 //app.use(cookieParser());
@@ -50,9 +163,11 @@ app.use(
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
-    allowedHeaders: "Content-Type, Authorization, X-Requested-With, email,",
+      allowedHeaders: "Content-Type, Authorization, X-Requested-With, email, Access-Control-Allow-Methods, Access-Control-Allow-Origin, Access-Control-Allow-Headers",
+  
   })
 );
+
 
 
 
@@ -98,7 +213,6 @@ app.use((req, res, next) => {
 
 
 
-app.use("/webhook", webhookRoutes);
 
 app.get("/api/v1/getCustomerId", setCurrentUser, (req, res) => {
   console.log("Session:", req.session);
@@ -375,20 +489,22 @@ app.post("/checkout", setCurrentUser, async (req, res) => {
 });
 
 
-
 app.post("/billing", setCurrentUser, async (req, res) => {
+  console.log("Session email:", req.session.email); // Added console.log for session email
+  console.log("Email from header:", req.headers.email); // Added console.log for email from header
+
+  const { email } = req.body;
+
   try {
-    // const userEmail = req.user.email;
-    // const user = await UserService.getUserByEmail(userEmail);
+    const userEmail = req.body.email;
+    const user = await UserService.getUserByEmail({ email });
+    const { customer } = req.body;
+    console.log("customer", customer);
 
-    // const customerId = user.customerID; // Get the customer ID from the user object
-    // console.log("customer ID", customerId);
-
-    // const session = await Stripe.createBillingSession(customerId); // Pass the customer ID to createBillingSession
-    // console.log("session", session);
-
-    res.redirect('https://billing.stripe.com/p/login/test_3csdU4cnx1S41mo288'); // Redirect to the provided link
-
+    const session = await Stripe.createBillingSession(customer);
+    console.log("session", session);
+    //res.redirect('https://billing.stripe.com/p/login/test_3csdU4cnx1S41mo288');
+    res.json({ url: session.url });
   } catch (error) {
     console.error("Error in /billing route:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -397,20 +513,18 @@ app.post("/billing", setCurrentUser, async (req, res) => {
 
 
 
-
-
-
+//this may be used to allow the user to save photos
 // Get the equivalent of __dirname
-const __filename = url.fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = url.fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
-const server = https.createServer(
-  {
-    key: fs.readFileSync(path.join(__dirname, "localhost-key.pem")),
-    cert: fs.readFileSync(path.join(__dirname, "localhost.pem")),
-  },
-  app
-);
+// const server = https.createServer(
+//   {
+//     key: fs.readFileSync(path.join(__dirname, "localhost-key.pem")),
+//     cert: fs.readFileSync(path.join(__dirname, "localhost.pem")),
+//   },
+//   app
+// );
 
 const startServer = async () => {
   try {

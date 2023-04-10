@@ -58,7 +58,7 @@ const createWebhook = (rawBody, sig) => {
    console.log("inside createWebhook");
    console.log("Raw Body:", rawBody.toString());
    console.log("Stripe-Signature Header:", sig);
-   console.log("Webhook Secret:", process.env.STRIPE_WEBHOOK_SECRET);
+
 
 
   const event = Stripe.webhooks.constructEvent(

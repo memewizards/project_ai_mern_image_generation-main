@@ -2,7 +2,7 @@ import User from "../user/user.model.js";
 
 const addGoogleUser =
   (User) =>
-  ({ id, email, firstName, lastName, profilePhoto }) => {
+  ({ id, email, firstName, lastName, profilePhoto, billingID }) => {
     const user = new User({
       id,
       email,
@@ -10,6 +10,7 @@ const addGoogleUser =
       lastName,
       profilePhoto,
       source: "google",
+      billingID,
     });
     return user.save();
   };
@@ -75,6 +76,16 @@ const subtractTokens = (User) => (email, tokensToSubtract) => async () => {
   }
 }
 
+const updateUser = (model) => async (id, updatedData) => {
+  try {
+    const user = await model.findByIdAndUpdate(id, updatedData, { new: true });
+    return user;
+  } catch (error) {
+    console.error("Error updating user:", error);
+    throw error;
+  }
+};
+
 const UserService = {
   addGoogleUser: addGoogleUser(User),
   addLocalUser: addLocalUser(User),
@@ -84,6 +95,7 @@ const UserService = {
   updatePlan: updatePlan(User),
   getUserByBillingID: getUserByBillingID(User),
   subtractTokens: subtractTokens(User),
+  updateUser: updateUser(User),
 };
 
 export default UserService;

@@ -31,7 +31,7 @@ const Account = () => {
     return;
   }
   console.log("Email being sent in headers:", customer.email);
-
+  const customerID = customer.billingID; // Use 'customer' instead of 'user'
   const response = await fetch("http://localhost:8080/checkout", {
     method: "POST",
     headers: {
@@ -40,7 +40,7 @@ const Account = () => {
     },
     body: JSON.stringify({
       product: selectedProduct,
-      customerID: customer.billingID,
+      customerID: customerID, // Use 'customerID' variable
     }),
   });
   console.log('Fetch response:', response);
@@ -49,7 +49,7 @@ const Account = () => {
   console.log('Session ID:', sessionId);
 
   stripe.redirectToCheckout({ sessionId });
- };
+};
 
 const handleManageBilling = async (event) => {
   event.preventDefault();
@@ -77,7 +77,7 @@ const handleManageBilling = async (event) => {
     window.location.replace(result.url);
 
     // Add the following line to redirect the user to the Stripe billing page
-    window.location.href = 'https://billing.stripe.com/p/login/test_3csdU4cnx1S41mo288';
+    //window.location.href = 'https://billing.stripe.com/p/login/cN2aFoecycsJeR2aEE';
 
   } catch (error) {
     console.error("Error in handleManageBilling:", error);

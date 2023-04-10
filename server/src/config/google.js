@@ -1,6 +1,9 @@
 import passport from "passport";
 import UserService from "../user/index.js";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import Stripe from "stripe";
+
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
 passport.use(
   new GoogleStrategy(
@@ -21,14 +24,24 @@ passport.use(
         const source = "google";
 
         const currentUser = await UserService.getUserByEmail({ email });
-        console.log("a google strategy was used");
         if (!currentUser) {
+          let billingID;
+          try {
+            const stripeCustomer = await stripe.customers.create({
+              email: email,
+            });
+            billingID = stripeCustomer.id;
+          } catch (error) {
+            console.error("Error creating Stripe customer:", error);
+          }
+
           const newUser = await UserService.addGoogleUser({
             id,
             email,
             firstName,
             lastName,
             profilePhoto,
+            billingID,
           });
           console.log("User object before serializeUser:", newUser);
           return done(null, newUser);
@@ -37,6 +50,17 @@ passport.use(
         if (currentUser.source != "google") {
           return done(null, false, {
             message: `You have previously signed up with a different signin method`,
+          });
+        }
+
+        if (!currentUser.billingID) {
+          // If the user doesn't have a billingID, create a new Stripe customer and update the user with the billingID
+          const stripeCustomer = await stripe.customers.create({
+            email: email,
+          });
+
+          await UserService.updateUser(currentUser._id, {
+            billingID: stripeCustomer.id,
           });
         }
 
