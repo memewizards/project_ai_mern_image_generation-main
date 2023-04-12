@@ -33,6 +33,7 @@ router.post("/", async (req, res) => {
         sampler_index: req.body.sampler_index,
         batch_size: req.body.batch_size,
       },
+      
     };
     
     const headers = {
@@ -63,13 +64,13 @@ router.post("/", async (req, res) => {
           res.json({ images }); // Send the images array back to the client
 
           const elapsedTime = (Date.now() - startTime) / 1000;
-          const baseTokens = 4;
-          const tokensToSubtract = baseTokens + elapsedTime * 0.001;
+          const baseTokens = 0.1;
+          const tokensToSubtract = baseTokens + elapsedTime * 0.1;
 
           try {
             const authToken = req.headers.authorization;
 
-            await fetch(`http://localhost:8080/subtract-tokens`, {
+            await fetch(`http://localhost:8080/subtract-tokens-ijge23tGe`, {
               method: "POST",
               headers: {
                 Authorization: authToken,

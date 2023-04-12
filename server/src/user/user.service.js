@@ -47,10 +47,10 @@ const getUsers = (User) => () => {
 };
 
 const getUserByEmail = (User) => async (emailOrObj) => {
-  console.log("getUserByEmail called with emailOrObj:", emailOrObj);
+  
   const email = typeof emailOrObj === "string" ? emailOrObj : emailOrObj.email;
   const user = await User.findOne({ email });
-  console.log("User found in getUserByEmail:", user);
+  
   return user;
 };
 

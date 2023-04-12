@@ -69,8 +69,14 @@ const createWebhook = (rawBody, sig) => {
   return event;
 };
 
+const retrieveSubscription = async (subscriptionId) => {
+  return await Stripe.subscriptions.retrieve(subscriptionId);
+};
+
+
 
 export default {
+  retrieveSubscription,
   getCustomerByID,
   addNewCustomer,
   createCheckoutSession,

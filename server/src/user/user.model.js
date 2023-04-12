@@ -23,7 +23,7 @@ const userSchema = new Schema({
   password: String,
   source: { type: String, required: [true, "source not specified"] },
   lastVisited: { type: Date, default: new Date() },
-  tokenBalance: { type: Number, default: 25 },
+  tokenBalance: { type: Number, default: 10 },
 });
 
 const userModel = mongoose.model("user", userSchema, "user");

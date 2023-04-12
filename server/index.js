@@ -31,7 +31,9 @@ import "./src/config/google.js";
 import jwt from "jsonwebtoken";
 
 import customerRoutes from "./routes/customerRoutes.js";
-
+import StripeModule from "./connect/stripe.js";
+// ...
+const { retrieveSubscription } = StripeModule;
 // Add this line after other route middlewares
 
 
@@ -65,25 +67,53 @@ router.post(
         console.log(JSON.stringify(data));
         break;
 
-      case "invoice.paid":
+      case "invoice.paid": {
+        const user = await UserService.getUserByBillingID(data.customer);
+        console.log("the user's invoice was paid.", data.customer);
+        if (!user) {
+          console.log(`customer.created: User not found for billing ID ${data.customer}`);
+          return response.sendStatus(400);
+        }
+
+        const subscription = data.lines.data[0].subscription;
+        const currentSubscription = await retrieveSubscription(subscription);
+      
+
+        if (currentSubscription.plan.id === process.env.PRODUCT_BASIC) {
+          console.log("You are talking about basic product");
+          user.tokenBalance += 200; // Add tokens for basic plan
+        }
+
+        if (currentSubscription.plan.id === process.env.PRODUCT_PRO) {
+          console.log("You are talking about pro product");
+          user.tokenBalance += 450; // Add tokens when subscribing to the basic plan
+        }
+
+        await user.save();
+
         break;
+      }
 
       case "customer.subscription.created": {
         const user = await UserService.getUserByBillingID(data.customer);
-
+        console.log("the user's subscription was created.", data.customer);
         if (!user) {
-          console.log(`User not found for billing ID ${data.customer}`);
+          console.log(
+            `customer.subscription.created: User not found for billing ID ${data.customer}`
+          );
           return response.sendStatus(400);
         }
 
         if (data.plan.id === process.env.PRODUCT_BASIC) {
           console.log("You are talking about basic product");
           user.plan = "basic";
+          user.tokenBalance += 200; // Add tokens when subscribing to the basic plan
         }
 
         if (data.plan.id === process.env.PRODUCT_PRO) {
           console.log("You are talking about pro product");
           user.plan = "pro";
+          user.tokenBalance += 450; // Add tokens when subscribing to the basic plan
         }
 
         user.hasTrial = true;
@@ -96,13 +126,17 @@ router.post(
 
       case "customer.subscription.updated": {
         const user = await UserService.getUserByBillingID(data.customer);
-
+        console.log("the user's subscription was updated.", data.customer)
         if (!user) {
-          console.log(`User not found for billing ID ${data.customer}`);
+          console.log(
+            `customer.subscription.updated: User not found for billing ID ${data.customer}`
+          );
           return response.sendStatus(400);
         }
 
-        if (data.plan.id == process.env.PRODUCT_BASIC) {
+        const previousPlan = user.plan; // Store the previous plan
+
+        if (data.plan.id === process.env.PRODUCT_BASIC) {
           console.log("You are talking about basic product");
           user.plan = "basic";
         }
@@ -270,7 +304,7 @@ app.get("/", (req, res) => {
 // });
 
 app.get("/profile", isLoggedIn, (req, res) => {
-  console.log("req.user:", req.user); // Add this line to log req.user
+  
   if (req.user) {
     res.json({ user: req.user });
     console.log("this is the user. isLoggedIn is true")
@@ -280,7 +314,7 @@ app.get("/profile", isLoggedIn, (req, res) => {
 });
 
 app.get("/account", isLoggedIn, (req, res) => {
-  console.log("req.user:", req.user); // Add this line to log req.user
+  
   if (req.user) {
     res.json({ user: req.user });
   } else {
@@ -290,7 +324,7 @@ app.get("/account", isLoggedIn, (req, res) => {
 
 app.get("/getTokenBalance", isLoggedIn, async (req, res) => {
   console.log("requested token balance");
-  console.log(req.user);
+ 
 
   // make sure user is authenticated before proceeding
   if (!req.user) {
@@ -317,33 +351,33 @@ app.get("/getTokenBalance", isLoggedIn, async (req, res) => {
 
 
 // Route for adding tokens to a user's token balance
-app.post("/add-tokens", async (req, res) => {
-  console.log(req.user);
-  const { email, tokensToAdd } = req.body;
+// app.post("/add-tokens", async (req, res) => {
+//   console.log(req.user);
+//   const { email, tokensToAdd } = req.body;
 
-  if (typeof tokensToAdd !== "number" || isNaN(tokensToAdd)) {
-    return res.status(400).send({ error: "Invalid tokensToAdd value" });
-  }
-  try {
-    const user = await UserService.getUserByEmail({ email });
+//   if (typeof tokensToAdd !== "number" || isNaN(tokensToAdd)) {
+//     return res.status(400).send({ error: "Invalid tokensToAdd value" });
+//   }
+//   try {
+//     const user = await UserService.getUserByEmail({ email });
 
-    if (!user) {
-      console.log(`app.js: Could not find user with email: ${email}`);
-      return res.status(404).json({ error: "User not found" });
-    }
+//     if (!user) {
+//       console.log(`app.js: Could not find user with email: ${email}`);
+//       return res.status(404).json({ error: "User not found" });
+//     }
 
-    user.tokenBalance += tokensToAdd;
-    await user.save();
+//     user.tokenBalance += tokensToAdd;
+//     await user.save();
 
-    res.send({ success: true, user }); // send a response to the client indicating success
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ error: "Internal server error" });
-  }
-});
+//     res.send({ success: true, user }); // send a response to the client indicating success
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send({ error: "Internal server error" });
+//   }
+// });
 
 // Route for subtracting tokens from a user's token balance
-app.post("/subtract-tokens", async (req, res) => {
+app.post("/subtract-tokens-ijge23tGe", async (req, res) => {
   console.log(req.user);
   const { email, tokensToSubtract } = req.body;
 
@@ -372,6 +406,31 @@ app.post("/subtract-tokens", async (req, res) => {
   }
 });
 
+
+// Route for adding tokens to a user's token balance
+app.post("/add-tokens", async (req, res) => {
+  const { email, tokensToAdd } = req.body;
+
+  if (typeof tokensToAdd !== "number" || isNaN(tokensToAdd)) {
+    return res.status(400).send({ error: "Invalid tokensToAdd value" });
+  }
+  try {
+    const user = await UserService.getUserByEmail({ email });
+
+    if (!user) {
+      console.log(`app.js: Could not find user with email: ${email}`);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.tokenBalance += tokensToAdd;
+    await user.save();
+
+    res.send({ success: true, user }); // send a response to the client indicating success
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ error: "Internal server error" });
+  }
+});
 
 app.get("/auth/google", (req, res, next) => {
   console.log("Reached /auth/google route");

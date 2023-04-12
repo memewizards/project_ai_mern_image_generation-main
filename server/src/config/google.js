@@ -13,9 +13,9 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
     async (accessToken, refreshToken, profile, done) => {
-      console.log("Google profile:", profile);
+     
       try {
-        console.log("GoogleStrategy called with profile:", profile);
+       
         const id = profile.id;
         const email = profile.emails[0].value;
         const firstName = profile.name.givenName;
@@ -43,10 +43,10 @@ passport.use(
             profilePhoto,
             billingID,
           });
-          console.log("User object before serializeUser:", newUser);
+          
           return done(null, newUser);
         }
-        console.log(currentUser);
+      
         if (currentUser.source != "google") {
           return done(null, false, {
             message: `You have previously signed up with a different signin method`,
@@ -65,7 +65,7 @@ passport.use(
         }
 
         currentUser.lastVisited = new Date();
-        console.log("User object before serializeUser:", currentUser);
+    
         return done(null, currentUser);
       } catch (error) {
         console.error("GoogleStrategy error:", error);

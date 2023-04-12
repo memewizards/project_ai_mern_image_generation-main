@@ -9,7 +9,7 @@ const userEmail = document.body.dataset.userEmail;
     const tokensToUse = 10; // replace with the actual amount of tokens to be used
 
     try {
-      const response = await fetch("/subtract-tokens", {
+      const response = await fetch("/subtract-tokens-ijge23tGe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

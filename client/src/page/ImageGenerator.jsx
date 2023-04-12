@@ -61,6 +61,10 @@ const downloadAllImages = async () => {
   }
 };
 
+  const emitTokenBalanceUpdate = (newBalance) => {
+    const event = new CustomEvent("tokenBalanceUpdate", { detail: newBalance });
+    window.dispatchEvent(event);
+  };
 
 
   
