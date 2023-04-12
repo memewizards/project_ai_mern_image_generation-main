@@ -187,20 +187,21 @@ router.post(
 
 
 app.use("/webhook", router);
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-//app.use(cookieParser());
-app.use(flash());
-app.use("/posts", postRoutes);
 app.use(
   cors({
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
-      allowedHeaders: "Content-Type, Authorization, X-Requested-With, email, Access-Control-Allow-Methods, Access-Control-Allow-Origin, Access-Control-Allow-Headers",
-  
+    allowedHeaders:
+      "Content-Type, Authorization, X-Requested-With, email, Access-Control-Allow-Methods, Access-Control-Allow-Origin, Access-Control-Allow-Headers",
   })
 );
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+//app.use(cookieParser());
+app.use(flash());
+
+
 
 
 

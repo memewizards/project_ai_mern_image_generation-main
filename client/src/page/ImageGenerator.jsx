@@ -126,6 +126,7 @@ const handleSliderInput = (name, value) => {
 };
 
 
+
 const generateImage = async () => {
   if (form.prompt) {
     try {
@@ -205,39 +206,43 @@ const generateImage = async () => {
 
 
 
-  
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  if (form.prompt && form.photo) {
+    setLoading(true);
+    console.log(" submission handling has begun");
+    try {
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("prompt", form.prompt);
 
-    if (form.prompt && form.photo) {
-      setLoading(true);
-      console.log(" submission handling has begun")
-      try {
-        const response = await fetch('http://dalle-arbb.onrender.com/api/v1/post', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ ...form }),
-        });
+      // Convert the blob URL back into a File object
+      const blobResponse = await fetch(form.photo[0]);
+      const fileBlob = await blobResponse.blob();
+      const file = new File([fileBlob], "generated-image.png", { type: "image/png" });
 
-        await response.json();
-        alert('Success');
-        navigate('/');
-      } catch (err) {
-        alert(err);
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      alert('Please generate an image with proper details');
+      formData.append("photo", file);
+
+      const postResponse = await fetch("http://localhost:8080/api/v1/post", {
+        method: "POST",
+        body: formData,
+      });
+
+      await postResponse.json();
+      alert("Success");
+      navigate("/");
+    } catch (err) {
+      alert(err);
+    } finally {
+      setLoading(false);
     }
-    
-  };
+  } else {
+    alert("Please generate an image with proper details");
+  }
+};
 
 
-  
 
 
 return (
@@ -252,7 +257,7 @@ return (
 
    
 
-  <form className="mt-16 max-w-3xl" onSubmit={handleSubmit}>
+  <form className="mt-16 max-w-3xl" onSubmit={handleSubmit} enctype="multipart/form-data">
   <div className="flex flex-col gap-5">
     <div>
       <label htmlFor="selectedckpt" className="text-gray-900 font-medium">
