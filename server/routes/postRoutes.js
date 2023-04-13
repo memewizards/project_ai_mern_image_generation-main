@@ -29,16 +29,24 @@ router.route("/").get(async (req, res) => {
   }
 });
 
-router.route("/").post(upload.single("photo"), async (req, res) => {
+router.route("/").post(upload.array("photo"), async (req, res) => {
   try {
     const { name, prompt } = req.body;
-    const { path } = req.file;
-    const photoUrl = await cloudinary.uploader.upload(path);
+    const files = req.files;
+
+    // Loop through each file and upload to Cloudinary
+    const photoUrlsPromises = files.map(async (file) => {
+      const { path } = file;
+      const photoUrl = await cloudinary.uploader.upload(path);
+      return photoUrl.url;
+    });
+
+    const photoUrls = await Promise.all(photoUrlsPromises);
 
     const newPost = await Post.create({
       name,
       prompt,
-      photoUrls: [photoUrl.url], // Store the URL as an array
+      photoUrls, // Store the array of URLs
     });
 
     res.status(200).json({ success: true, data: newPost });
@@ -50,6 +58,7 @@ router.route("/").post(upload.single("photo"), async (req, res) => {
     });
   }
 });
+
 
 
 export default router;

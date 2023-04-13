@@ -213,23 +213,27 @@ const handleSubmit = async (e) => {
     setLoading(true);
     console.log(" submission handling has begun");
     try {
-      const formData = new FormData();
-      formData.append("name", form.name);
-      formData.append("prompt", form.prompt);
+      // Loop through each image in the form.photo array
+      for (const photoUrl of form.photo) {
+        const formData = new FormData();
+        formData.append("name", form.name);
+        formData.append("prompt", form.prompt);
 
-      // Convert the blob URL back into a File object
-      const blobResponse = await fetch(form.photo[0]);
-      const fileBlob = await blobResponse.blob();
-      const file = new File([fileBlob], "generated-image.png", { type: "image/png" });
+        // Convert the blob URL back into a File object
+        const blobResponse = await fetch(photoUrl);
+        const fileBlob = await blobResponse.blob();
+        const file = new File([fileBlob], "generated-image.png", { type: "image/png" });
 
-      formData.append("photo", file);
+        formData.append("photo", file);
 
-      const postResponse = await fetch("http://localhost:8080/api/v1/post", {
-        method: "POST",
-        body: formData,
-      });
+        const postResponse = await fetch("http://localhost:8080/api/v1/post", {
+          method: "POST",
+          body: formData,
+        });
 
-      await postResponse.json();
+        await postResponse.json();
+      }
+
       alert("Success");
       navigate("/");
     } catch (err) {
@@ -241,6 +245,7 @@ const handleSubmit = async (e) => {
     alert("Please generate an image with proper details");
   }
 };
+
 
 
 
