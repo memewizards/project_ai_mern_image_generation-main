@@ -8,6 +8,10 @@ import Profile from "./Profile";
 import None from "./None";
 import BasicPlan from "./BasicPlan";
 import ProPlan from "./ProPlan";
+import userProfile from "./userProfile";
+import Blog from "./Blog";
+import Logout from "./Logout";
+
 
 
 export {
@@ -21,5 +25,7 @@ export {
   None,
   BasicPlan,
   ProPlan,
-  
+  userProfile,
+  Blog,
+  Logout,
 };

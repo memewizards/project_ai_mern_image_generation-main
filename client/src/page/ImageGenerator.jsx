@@ -6,11 +6,13 @@ import { FormField, Loader } from '../components';
 import useCustomer from "../hooks/useCustomer";
 import fs from 'fs';
 import path from 'path';
+import { useContext } from "react";
+import { AuthContext } from "../AuthContext.jsx";
 
 
-  const ImageGenerator = () => {
+  const ImageGenerator = (props) => {
   const navigate = useNavigate();
-
+  const { isLoggedIn, tokenBalance } = useContext(AuthContext);
   const [form, setForm] = useState({
     name: '',
     prompt: '',
@@ -19,9 +21,9 @@ import path from 'path';
     selectedckpt: '',
     width: 256,
     height: 256,
-    steps: 50,
+    steps: 10,
     seed: -1,
-    cfg_scale: 1.0,
+    cfg_scale: 3.0,
     batch_size: 4,
     sampler_index: 'Euler a',
   });
@@ -128,7 +130,28 @@ const handleSliderInput = (name, value) => {
 
 
 const generateImage = async () => {
+
+  // Check if the user is logged in using authToken
+  const authToken = localStorage.getItem("authToken");
+
+  const res = await fetch("http://localhost:8080/profile", {
+    headers: {
+      Authorization: `Bearer ${authToken}`,
+    },
+    credentials: "include",
+  });
+
+  if (res.status === 404) {
+    console.log("User is not logged in");
+    return;
+  }
+
   if (form.prompt) {
+    if (props.tokenBalance <= 0) { // Add this check for token balance
+      alert("Low token balance. Get 10 free tokens by signing up, or buy more tokens.");
+      return;
+    }
+    
     try {
       setGeneratingImg(true);
 
@@ -163,35 +186,46 @@ const generateImage = async () => {
       console.log("the response is", data)
 
       if (data.error) {
-        throw new Error(data.error);
-      }
+  throw new Error(data.error);
+}
 
-      // Check if there are any images in the response
-      if (data.images && data.images.length > 0) {
-        // Create an array to hold the object URLs of all images
-        const imageUrls = data.images.map((image) => {
-          const blob = base64ToBlob(image);
-          return URL.createObjectURL(blob);
-        });
+// Check if there are any images in the response
+if (data.images && data.images.length > 0) {
+  // Create an array to hold the object URLs of all images
+  const imageUrls = data.images.map((image) => {
+    const blob = base64ToBlob(image);
+    return URL.createObjectURL(blob);
+  });
 
-        // Update the form.photo state with the new array of image URLs
-        setForm({ ...form, photo: imageUrls });
-      } else {
-        throw new Error('No images were generated.');
-      }
+  // Update the form.photo state with the new array of image URLs
+  setForm({ ...form, photo: imageUrls });
 
-    } catch (err) {
-      console.log("caught an alert", (err))
-      alert(err);
-    } finally {
-      console.log("finally...:", setGeneratingImg)
-      setGeneratingImg(false);
-    }
-  } else {
-    alert('Please provide proper prompt');
-  }
+  // Emit the tokenBalanceUpdate event
+  const actualTokensSubtracted = data.tokensSubtracted;
+const newBalance = props.tokenBalance - actualTokensSubtracted;
+
+if (newBalance < 0) {
+  console.error('Unexpected negative token balance:', newBalance);
+}
+
+emitTokenBalanceUpdate(newBalance);
+props.getTokenBalance();
+} else {
+  throw new Error('No images were generated.');
+}
+
+
+} catch (err) {
+  console.log("caught an alert", (err))
+  alert(err);
+} finally {
+  console.log("finally...:", setGeneratingImg)
+  setGeneratingImg(false);
+}
+} else {
+  alert('Please provide proper prompt');
+}
 };
-
 
 
   const SliderInput = ({ label, name, min, max, value, step, onChange }) => {
@@ -199,8 +233,6 @@ const generateImage = async () => {
     const newValue = e.target.value;
     onChange(step, newValue);
   };
-  
-  // rest of the component code goes here
   
 };
 
@@ -259,8 +291,7 @@ return (
       </p>
      </div>
 
-
-   
+  
 
   <form className="mt-16 max-w-3xl" onSubmit={handleSubmit} enctype="multipart/form-data">
   <div className="flex flex-col gap-5">
@@ -583,7 +614,7 @@ return (
         </div>
 
         <div className="mt-10">
-          <p className="mt-2 text-[#666e75] text-[14px]">** Once you have created the image you want, you can share it with others in the community **</p>
+          <p className="mt-2 text-[#666e75] text-[14px]">This will post your images to the home page</p>
           <button
             type="submit"
             className="mt-3 text-white bg-[#6469ff] font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center"

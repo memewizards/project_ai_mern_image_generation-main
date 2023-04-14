@@ -282,8 +282,10 @@ app.post("/userlogin", async (req, res) => {
   }
 });
 const isLoggedIn = (req, res, next) => {
+  console.log(`is loggedin: Authorization header: ${req.headers.authorization}`);
   req.user ? next() : res.sendStatus(401);
 };
+
 
 
 app.get("/", (req, res) => {
@@ -323,16 +325,26 @@ app.get("/account", isLoggedIn, (req, res) => {
   }
 });
 
-app.get("/getTokenBalance", isLoggedIn, async (req, res) => {
-  console.log("requested token balance");
- 
+app.post("/api/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Error destroying session:", err);
+      res.status(500).json({ message: "Error logging out" });
+    } else {
+      res.status(200).json({ message: "Logged out successfully" });
+    }
+  });
+});
 
-  // make sure user is authenticated before proceeding
+app.get("/getTokenBalance", isLoggedIn, async (req, res) => {
+  console.log("Requested token balance");
+
+  // Make sure the user is authenticated before proceeding
   if (!req.user) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const { email } = req.query; // extract the email value from the query string
+  const { email } = req.query; // Extract the email value from the query string
 
   try {
     const user = await UserService.getUserByEmail({ email });
@@ -342,7 +354,7 @@ app.get("/getTokenBalance", isLoggedIn, async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ tokenBalance: user.tokenBalance }); // send the token balance back to the client
+    res.status(200).json({ tokenBalance: user.tokenBalance }); // Send the token balance back to the client
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: "Internal server error" });
@@ -400,7 +412,7 @@ app.post("/subtract-tokens-ijge23tGe", async (req, res) => {
     user.tokenBalance -= tokensToSubtract;
     await user.save();
 
-    res.send({ success: true, user }); // send a response to the client indicating success
+    res.send({ success: true, tokenBalance: user.tokenBalance }); // send a response to the client indicating success
   } catch (error) {
     console.error(error);
     res.status(500).send({ error: "Internal server error" });
@@ -571,6 +583,16 @@ app.post("/billing", setCurrentUser, async (req, res) => {
   }
 });
 
+app.get("/user/:username", async (req, res) => {
+  const username = req.params.username; 
+  const userProfile = await UserService.getUserProfile(username);
+
+  if (userProfile) {
+    res.json(userProfile);
+  } else {
+    res.status(404).json({ message: "User not found" });
+  }
+});
 
 
 //this may be used to allow the user to save photos

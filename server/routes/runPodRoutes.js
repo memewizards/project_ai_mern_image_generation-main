@@ -1,8 +1,8 @@
 import express from "express";
 import * as dotenv from "dotenv";
 import fetch from "node-fetch";
+import UserService from "../src/user/user.service.js";
 
-// Inside the router.post("/", async (req, res) => { ... });
 
 
 dotenv.config();
@@ -61,7 +61,7 @@ router.post("/", async (req, res) => {
             images.push(imageString); // Add the base64 image data to the images array
           }
 
-          res.json({ images }); // Send the images array back to the client
+          //res.json({ images }); // Send the images array back to the client
 
           const elapsedTime = (Date.now() - startTime) / 1000;
           const baseTokens = 0.1;
@@ -70,20 +70,51 @@ router.post("/", async (req, res) => {
           try {
             const authToken = req.headers.authorization;
 
-            await fetch(`http://localhost:8080/subtract-tokens-ijge23tGe`, {
-              method: "POST",
-              headers: {
-                Authorization: authToken,
-                "Content-Type": "application/json",
-              },
-              credentials: "include",
-              body: JSON.stringify({
-                email: userEmail,
-                tokensToSubtract: tokensToSubtract,
-              }),
-            });
+            const tokenSubtractionResponse = await fetch(
+              `http://localhost:8080/subtract-tokens-ijge23tGe`,
+              {
+                method: "POST",
+                headers: {
+                  Authorization: authToken,
+                  "Content-Type": "application/json",
+                },
+                credentials: "include",
+                body: JSON.stringify({
+                  email: userEmail,
+                  tokensToSubtract: tokensToSubtract,
+                }),
+              }
+            );
+            const data = await tokenSubtractionResponse.json();
 
+            let newBalance = parseFloat(data.tokenBalance);
             console.log(`Tokens subtracted: ${tokensToSubtract}`);
+
+            // If the new balance is NaN or negative, set it to 0
+           if (isNaN(newBalance) || newBalance <= 0) {
+             newBalance = 0;
+           }
+
+           // Update the user's token balance in the system
+          if (userEmail) {
+            console.log(
+              `Attempting to update token balance for user: ${userEmail}`
+            );
+
+          await UserService.updateUserTokenBalance(userEmail, newBalance);
+          } else {
+            console.error("Error: userEmail is undefined or empty.");
+          }
+
+           console.log(`runpodRoutes: New token balance: ${newBalance}`);
+
+            // Add the new balance to the response JSON
+            // Add the actual subtracted tokens to the response JSON
+            res.json({
+              images,
+              newBalance,
+              tokensSubtracted: tokensToSubtract,
+            });
           } catch (error) {
             console.error("Error while subtracting tokens:", error);
           }
@@ -97,6 +128,7 @@ router.post("/", async (req, res) => {
         res.status(500).send(error.message);
       }
     };
+
 
 
 try {

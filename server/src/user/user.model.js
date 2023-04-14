@@ -21,6 +21,7 @@ const userSchema = new Schema({
   lastName: String,
   profilePhoto: String,
   password: String,
+  username: String,
   source: { type: String, required: [true, "source not specified"] },
   lastVisited: { type: Date, default: new Date() },
   tokenBalance: { type: Number, default: 10 },

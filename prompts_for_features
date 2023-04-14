@@ -1,0 +1,25 @@
+
+///////User URLs with image display:
+
+Can you write an overview of the steps necessary to add a route to my nodejs project.
+
+The route should have a  public url like mysite.com/exampleusername 
+
+A new Url should be given to each user when they sign up.
+We are using mongodb to store the user schema. 
+
+The user's profile url should display all the images they have created and shared Publicly. 
+
+The interface we are using is built with react. 
+
+
+//////Searchable/Running Ckpts: 
+
+
+ I have a part of my front end app where the user can select a ckpt aka safetensors model to use for image generation. 
+
+The design is a drop down list with react. Users click on the drop down box to select a ckpt. 
+
+I'd like to add the following functionality:
+1. The ability to click in the box to type and enter a search for a ckpt. 
+2. A green dot indicating the status of the displayed next to any ckpt instance that is already running on the the gpu cloud

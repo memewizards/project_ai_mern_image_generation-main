@@ -38,6 +38,8 @@ const jwtVerify = async (jwtPayload, done) => {
   }
 };
 
+
+
 passport.use(new JwtStrategy(jwtOptions, jwtVerify));
 
 export default passport;

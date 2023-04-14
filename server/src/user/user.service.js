@@ -76,6 +76,16 @@ const subtractTokens = (User) => (email, tokensToSubtract) => async () => {
   }
 }
 
+async function getUserProfile(username) {
+  const user = await User.findOne({ username: username }).populate("images");
+  if (user) {
+    const publicImages = user.images.filter((image) => image.isPublic);
+    return { user, images: publicImages };
+  } else {
+    return null;
+  }
+}
+
 const updateUser = (model) => async (id, updatedData) => {
   try {
     const user = await model.findByIdAndUpdate(id, updatedData, { new: true });
@@ -85,6 +95,25 @@ const updateUser = (model) => async (id, updatedData) => {
     throw error;
   }
 };
+
+async function updateUserTokenBalance(email, newBalance) {
+  try {
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      console.error(`User with email "${email}" not found`);
+      throw new Error('User not found');
+    }
+
+    user.tokenBalance = newBalance;
+    await user.save();
+
+    return user;
+  } catch (error) {
+    console.error('Error updating user token balance:', error);
+    throw error;
+  }
+};
+
 
 const UserService = {
   addGoogleUser: addGoogleUser(User),
@@ -96,6 +125,8 @@ const UserService = {
   getUserByBillingID: getUserByBillingID(User),
   subtractTokens: subtractTokens(User),
   updateUser: updateUser(User),
+  getUserProfile: getUserProfile(User),
+  updateUserTokenBalance: updateUserTokenBalance,
 };
 
 export default UserService;

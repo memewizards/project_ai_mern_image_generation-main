@@ -94,33 +94,16 @@ const Profile = () => {
               </div>
               <div className="w-5/6 ml-4">
                 <h3 className="text-2xl">
-                  {user.firstName} {user.lastName} (#{user.id})
+                  {user.firstName} {user.lastName} 
                 </h3>
                 <p>Logged in using {user.source}</p>
                 <p>{user.email}</p>
-                <p>Last visited on {user.lastVisited}</p>
+                
                 <p>Token Balance: {parseFloat(tokenBalance).toFixed(3)}</p>
                 
-                <button onClick={handleCheckBalance}>Check Token Balance</button>
-                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCheckBalance}>
-                  Check Token Balance
-                </button>
-                  <button
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    onClick={() => handleSubtractTokens(0.1)} // Pass the number of tokens to subtract
-                  >
-                    Subtract .1 Token
-                  </button>
-                  <button
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                    onClick={() => handleSubtractTokens(1)} // Pass the number of tokens to subtract
-                  >
-                    Subtract 1 Token
-                  </button>
+              
                 <p>
-                  <a href="/auth/logout" className="text-blue-600">
-                    Logout
-                  </a>
+                  
                 </p>
               </div>
             </div>

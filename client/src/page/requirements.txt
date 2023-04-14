@@ -9,8 +9,6 @@ trying again with 19 images. Sucseeded.
 
 trying again with 23 images. failed. 
 
-It's possible that there is a problem with the buffer or ram on this device. 
-the system is running slowlly and made need a restart. 
 
 a job at 49 steps at 1024x1024 with a batch size of 9 failed. 
 

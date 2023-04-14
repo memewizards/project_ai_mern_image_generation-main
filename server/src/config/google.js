@@ -5,6 +5,13 @@ import Stripe from "stripe";
 
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
+function generateUniqueUsername(email, firstName, lastName) {
+  const username = `${firstName.toLowerCase()}${lastName.toLowerCase()}${
+    email.split("@")[0]
+  }`;
+  return username;
+}
+
 passport.use(
   new GoogleStrategy(
     {
@@ -42,6 +49,7 @@ passport.use(
             lastName,
             profilePhoto,
             billingID,
+            username: generateUniqueUsername(email, firstName, lastName),
           });
           
           return done(null, newUser);

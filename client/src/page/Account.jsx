@@ -116,7 +116,8 @@ const handleManageBilling = async (event) => {
                     onChange={handleProductSelection}
                     className="mr-2"
                   />
-                  <label htmlFor="basic">Basic for $10</label>
+                  <label htmlFor="basic">Basic for $10 -</label>
+                  <label htmlFor="basic"> 200 tokens. Makes around 500 high res images. </label>
                 </div>
                 <div className="mb-4">
                   <input
@@ -127,16 +128,27 @@ const handleManageBilling = async (event) => {
                     onChange={handleProductSelection}
                     className="mr-2"
                   />
-                  <label htmlFor="pro">Pro for $12</label>
+                  <label htmlFor="pro">Pro for $25 -</label>
+                  <label htmlFor="basic"> 450 tokens. Makes around 1125 high res images. </label>
                 </div>
-                <button
-                  className="btn btn-primary py-2 px-4 bg-blue-600 text-white font-semibold rounded"
-                  id="checkout-button"
-                  type="submit"
-                  onClick={handleCheckout}
-                >
-                  Buy now
-                </button>
+               <button
+                 className="btn btn-primary py-2 px-4 bg-green-600 text-white font-semibold rounded"
+                 id="checkout-button"
+                 type="submit"
+                 onClick={handleCheckout}
+               >
+                 Buy now
+               </button>
+               
+               <button
+                 className="btn btn-lg btn-primary py-2 px-6 bg-blue-600 text-white font-semibold rounded ml-4"
+                 id="manage-billing-button"
+                 type="submit"
+                 onClick={handleManageBilling}
+               >
+                 Manage Billing
+               </button>
+               
               </>
             ) : (
               <>

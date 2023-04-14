@@ -72,34 +72,34 @@ return (
       </head>
       <body>
 
-        <p className='links'>
+        {/* <p className='links'>
           <a href='/local/signup'>Sign up using Email →</a>
-        </p>
+        </p> */}
         <div className='content'>
           <form className='text-center' onSubmit={handleGoogleLogin}>
-            <img
+            {/* <img
               className='mb-4'
               src='./images/saasbase.png'
               alt=''
               width='72'
               height='72'
-            />
+            /> */}
             <h1 className='h3 mb-3 font-weight-normal'>Sign in with Google</h1>
             <p className='mb-3 text-muted'>
-             At this time only google login is available.
+             Create an account or sign in using your Google account.
             </p>
             <button className='btn btn-primary w-auto px-4 py-2 my-2 btn-sm' type='submit'>
               Sign in with Google
             </button>
           </form>
 
-          <hr className='divider' />
+          {/* <hr className='divider' />
           <form className='text-center' onSubmit={handleSubmit}>
             <button className='btn btn-secondary w-auto px-4 py-2 my-2 btn-sm' type='submit'>
               Sign in with Email
             </button>
 
-          </form>
+          </form> */}
         </div>
       </body>
     </html>

@@ -35,7 +35,7 @@ const createCheckoutSession = async (customerID, price) => {
 const createBillingSession = async (customer) => {
   const session = await Stripe.billingPortal.sessions.create({
     customer,
-    return_url: "https://localhost:5173/",
+    return_url: "http://localhost:5173/",
   });
   return session;
 };
