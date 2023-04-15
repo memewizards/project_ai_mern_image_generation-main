@@ -1,30 +1,64 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { download } from '../assets';
 import { downloadImage } from '../utils';
 
-const Card = ({ _id, name, prompt, photoUrls }) => (
-  <div className="rounded-xl group relative shadow-card hover:shadow-cardhover card">
-    <img
-      className="w-full h-auto object-cover rounded-xl"
-      src={photoUrls[0]} // Use photoUrls here
-      alt={prompt}
-    />
-    <div className="group-hover:flex flex-col max-h-[94.5%] hidden absolute bottom-0 left-0 right-0 bg-[#10131f] m-2 p-4 rounded-md">
-      <p className="text-white text-sm overflow-y-auto prompt">{prompt}</p>
+const Card = ({ _id, name, prompt, negativePrompt, checkpoint, steps, samplingMethod, seed, cfg_scale, width, height, photoUrls, upvotes: initialUpvotes, downvotes: initialDownvotes, onClick }) => {
+  const [upvotes, setUpvotes] = useState(initialUpvotes);
+  const [downvotes, setDownvotes] = useState(initialDownvotes);
 
-      <div className="mt-5 flex justify-between items-center gap-2">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full object-cover bg-green-700 flex justify-center items-center text-white text-xs font-bold">{name[0]}</div>
-          <p className="text-white text-sm">{name}</p>
+  const handleUpvote = async () => {
+    const response = await fetch(`http://localhost:8080/post/${_id}/upvote`, { method: 'PUT' });
+
+    
+    const data = await response.json();
+    setUpvotes(data.upvotes);
+  };
+
+  const handleDownvote = async () => {
+    const response = await fetch(`http://localhost:8080/post/${_id}/downvote`, { method: 'PUT' });
+
+    const data = await response.json();
+    setDownvotes(data.downvotes);
+  };
+
+  return (
+    <div className="rounded-xl group relative shadow-card hover:shadow-cardhover card">
+      <img
+        className="w-full h-auto object-cover rounded-xl"
+        src={photoUrls[0]}
+        alt={prompt}
+      />
+      <div className="group-hover:flex flex-col max-h-[94.5%] hidden absolute bottom-0 left-0 right-0 bg-[#10131f] m-2 p-4 rounded-md">
+        <p className="text-white text-sm overflow-y-auto prompt">{prompt}</p>
+        <p className="text-white text-sm mt-2">Negative Prompt: {negativePrompt}</p>
+        <p className="text-white text-sm">Checkpoint: {checkpoint}</p>
+        <p className="text-white text-sm">Steps: {steps}</p>
+         <p className="text-white text-sm">Seed: {seed}</p>
+        <p className="text-white text-sm">Sampling Method: {samplingMethod}</p>
+        <p className="text-white text-sm">Cfg Scale: {cfg_scale}</p>
+        <p className="text-white text-sm">Width: {width}px</p>
+        <p className="text-white text-sm">Height: {height}px</p>
+        <div className="card" onClick={onClick}></div>
+
+        <div className="mt-5 flex justify-between items-center gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full object-cover bg-green-700 flex justify-center items-center text-white text-xs font-bold">{name[0]}</div>
+            <p className="text-white text-sm">{name}</p>
+          </div>
+          <button type="button" onClick={() => downloadImage(_id, photoUrls[0])} className="outline-none bg-transparent border-none">
+            <img src={download} alt="download" className="w-6 h-6 object-contain invert" />
+          </button>
         </div>
-        <button type="button" onClick={() => downloadImage(_id, photoUrls[0])} className="outline-none bg-transparent border-none">
-          <img src={download} alt="download" className="w-6 h-6 object-contain invert" />
-        </button>
+
+        {/* Add upvote and downvote buttons with click handlers */}
+        <div className="mt-4 flex justify-between items-center">
+          <button onClick={handleUpvote} className="bg-green-500 text-white rounded-md py-1 px-3">Upvote ({upvotes})</button>
+          <button onClick={handleDownvote} className="bg-red-500 text-white rounded-md py-1 px-3">Downvote ({downvotes})</button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default Card;
-

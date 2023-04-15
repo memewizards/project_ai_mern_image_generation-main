@@ -25,7 +25,7 @@ import { AuthContext } from "../AuthContext.jsx";
     seed: -1,
     cfg_scale: 3.0,
     batch_size: 4,
-    sampler_index: 'Euler a',
+    sampling_index: '',
   });
 
 
@@ -250,6 +250,14 @@ const handleSubmit = async (e) => {
         const formData = new FormData();
         formData.append("name", form.name);
         formData.append("prompt", form.prompt);
+        formData.append("negativePrompt", form.negativePrompt); // Add this line
+        formData.append("checkpoint", form.selectedckpt); // Add this line
+        formData.append("cfg_scale", form.cfg_scale);
+        formData.append("width", form.width);
+        formData.append("height", form.height);
+        formData.append("samplingMethod", form.sampling_index);
+        formData.append("steps", form.steps);
+        formData.append("seed", form.seed);
 
         // Convert the blob URL back into a File object
         const blobResponse = await fetch(photoUrl);

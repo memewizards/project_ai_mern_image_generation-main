@@ -20,18 +20,27 @@ router.route("/").get(async (req, res) => {
     const posts = await Post.find({});
     res.status(200).json({ success: true, data: posts });
   } catch (err) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Fetching posts failed, please try again",
-      });
+    res.status(500).json({
+      success: false,
+      message: "Fetching posts failed, please try again",
+    });
   }
 });
 
 router.route("/").post(upload.array("photo"), async (req, res) => {
   try {
-    const { name, prompt } = req.body;
+    const {
+      name,
+      prompt,
+      negativePrompt,
+      cfg_scale,
+      width,
+      height,
+      samplingMethod,
+      steps,
+      checkpoint,
+      seed,
+    } = req.body;
     const files = req.files;
 
     // Loop through each file and upload to Cloudinary
@@ -46,6 +55,14 @@ router.route("/").post(upload.array("photo"), async (req, res) => {
     const newPost = await Post.create({
       name,
       prompt,
+      negativePrompt,
+      cfg_scale,
+      width,
+      height,
+      samplingMethod,
+      steps,
+      checkpoint,
+      seed,
       photoUrls, // Store the array of URLs
     });
 
@@ -58,7 +75,5 @@ router.route("/").post(upload.array("photo"), async (req, res) => {
     });
   }
 });
-
-
 
 export default router;

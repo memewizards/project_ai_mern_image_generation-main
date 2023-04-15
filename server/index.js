@@ -29,6 +29,7 @@ import * as uuid from "uuid";
 import bcrypt from "bcrypt";
 import "./src/config/google.js";
 import jwt from "jsonwebtoken";
+import Post from '../server/mongodb/models/post.js'; // Import your Post model
 
 import customerRoutes from "./routes/customerRoutes.js";
 import StripeModule from "./connect/stripe.js";
@@ -204,8 +205,6 @@ app.use(flash());
 
 
 
-
-
 app.use(
   "/api/v1/runpod",
   passport.authenticate("jwt", { session: false }),
@@ -247,6 +246,25 @@ app.use((req, res, next) => {
 });
 
 
+app.put("/post/:postId/upvote", async (req, res) => {
+  const postId = req.params.postId;
+  const post = await Post.findByIdAndUpdate(
+    postId,
+    { $inc: { upvotes: 1 } },
+    { new: true }
+  );
+  res.json(post);
+});
+
+app.put("/post/:postId/downvote", async (req, res) => {
+  const postId = req.params.postId;
+  const post = await Post.findByIdAndUpdate(
+    postId,
+    { $inc: { downvotes: 1 } },
+    { new: true }
+  );
+  res.json(post);
+});
 
 
 app.get("/api/v1/getCustomerId", setCurrentUser, (req, res) => {
