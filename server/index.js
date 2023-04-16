@@ -190,7 +190,7 @@ router.post(
 app.use("/webhook", router);
 app.use(
   cors({
-    origin: "http://dreambrainai.com",
+    origin: "https://dreambrainai.com",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders:
