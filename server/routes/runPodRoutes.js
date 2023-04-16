@@ -71,7 +71,7 @@ router.post("/", async (req, res) => {
             const authToken = req.headers.authorization;
 
             const tokenSubtractionResponse = await fetch(
-              `http://localhost:8080/subtract-tokens-ijge23tGe`,
+              `https://dreambrainai.onrender.com/subtract-tokens-ijge23tGe`,
               {
                 method: "POST",
                 headers: {
