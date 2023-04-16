@@ -189,12 +189,13 @@ router.post(
 
 app.use("/webhook", router);
 const corsMiddleware = cors({
-  origin: "https://dreambrainai.com",
+  origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
   allowedHeaders:
     "Content-Type, Authorization, X-Requested-With, email, Access-Control-Allow-Methods, Access-Control-Allow-Origin, Access-Control-Allow-Headers",
 });
+
 app.use(corsMiddleware); // Add this line before defining your routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
