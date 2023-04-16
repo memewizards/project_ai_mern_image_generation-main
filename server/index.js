@@ -629,8 +629,10 @@ app.get("/user/:username", async (req, res) => {
 const startServer = async () => {
   try {
     connectDB(process.env.MONGODB_URL);
-    //app.listen(8080, () => console.log("Server started on port 8080"));
-    app.listen('0.0.0.0', () => console.log("Server started on port 0000"));
+    const port = 8080; // Specify the port you want the server to listen on
+    app.listen(port, "0.0.0.0", () =>
+      console.log(`Server started on port ${port}`)
+    );
   } catch (error) {
     console.log(error);
   }
