@@ -188,15 +188,15 @@ router.post(
 
 
 app.use("/webhook", router);
-const corsMiddleware = cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-  allowedHeaders:
-    "Content-Type, Authorization, X-Requested-With, email, Access-Control-Allow-Methods, Access-Control-Allow-Origin, Access-Control-Allow-Headers",
-});
-
-app.use(corsMiddleware); // Add this line before defining your routes
+app.use(
+  cors({
+    origin: "https://dreambrainai.com",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+    allowedHeaders:
+      "Content-Type, Authorization, X-Requested-With, email, Access-Control-Allow-Methods, Access-Control-Allow-Origin, Access-Control-Allow-Headers",
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 //app.use(cookieParser());
@@ -629,7 +629,8 @@ app.get("/user/:username", async (req, res) => {
 const startServer = async () => {
   try {
     connectDB(process.env.MONGODB_URL);
-    app.listen(8080, () => console.log("Server started on port 8080"));
+    //app.listen(8080, () => console.log("Server started on port 8080"));
+    app.listen('0.0.0.0', () => console.log("Server started on port 0000"));
   } catch (error) {
     console.log(error);
   }
