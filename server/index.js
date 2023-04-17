@@ -496,7 +496,7 @@ app.get("/auth/google/callback", (req, res, next) => {
 
       // Redirect to the client-side, passing the JWT token as a query parameter
       return res.redirect(
-        `https://dreambrainai.onrender.com/profile?token=${token}`
+        `https://dreambrainai.com/profile?token=${token}`
       );
     });
   })(req, res, next);
