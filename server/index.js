@@ -298,8 +298,28 @@ app.post("/userlogin", async (req, res) => {
   }
 });
 const isLoggedIn = (req, res, next) => {
-  console.log(`is loggedin: Authorization header: ${req.headers.authorization}`);
-  req.user ? next() : res.sendStatus(401);
+  console.log(
+    `is loggedin: Authorization header: ${req.headers.authorization}`
+  );
+
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer ")
+  ) {
+    const token = req.headers.authorization.split(" ")[1];
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        console.log("JWT verification error:", err);
+        return res.sendStatus(401);
+      }
+
+      req.user = decoded;
+      next();
+    });
+  } else {
+    res.sendStatus(401);
+  }
 };
 
 
