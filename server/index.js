@@ -33,10 +33,8 @@ import Post from '../server/mongodb/models/post.js'; // Import your Post model
 
 import customerRoutes from "./routes/customerRoutes.js";
 import StripeModule from "./connect/stripe.js";
-// ...
-const { retrieveSubscription } = StripeModule;
-// Add this line after other route middlewares
 
+const { retrieveSubscription } = StripeModule;
 
 dotenv.config();
 const app = express();
@@ -306,10 +304,7 @@ const isLoggedIn = (req, res, next) => {
 
 
 
-app.get("/", (req, res) => {
-  
-});
-
+app.get("/", (req, res) => res.send("Hello World!"));
 
 
 // app.get("/", (req, res) => {
