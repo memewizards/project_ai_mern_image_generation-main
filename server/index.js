@@ -623,6 +623,11 @@ app.get("/user/:username", async (req, res) => {
 //   app
 // );
 
+// Handle client-side routing by redirecting to the client domain for all unmatched routes
+app.get('*', (req, res) => {
+  res.redirect(`https://dreambrainai.com${req.url}`);
+});
+
 const startServer = async () => {
   try {
     connectDB(process.env.MONGODB_URL);

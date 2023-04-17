@@ -2,8 +2,12 @@ import { useState, useEffect } from "react";
 
 async function fetchData(endpoint) {
   try {
+    const token = localStorage.getItem("authToken");
     const res = await fetch(endpoint, {
       credentials: "include",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (res.status === 404) {
@@ -19,22 +23,24 @@ async function fetchData(endpoint) {
     return null;
   }
 }
-
 export default function useCustomer(endpoint) {
   const [data, setData] = useState(null);
 
   useEffect(() => {
     const onStorageChange = (e) => {
       if (e.key === "authToken") {
-        fetchData(devEndpoint).then((fetchedData) => {
+        fetchData(endpoint).then((fetchedData) => {
           setData(fetchedData);
         });
       }
     };
 
-    // Replace 'https' with 'http' for development environment
-    const devEndpoint = endpoint.replace("https://", "http://");
-    fetchData(devEndpoint).then((fetchedData) => {
+    // Choose the correct protocol based on the environment
+    if (process.env.NODE_ENV === "development") {
+      endpoint = endpoint.replace("https://", "http://");
+    }
+
+    fetchData(endpoint).then((fetchedData) => {
       setData(fetchedData);
     });
 
