@@ -192,7 +192,7 @@ app.use(
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders:
-      "Content-Type, Authorization, X-Requested-With, email, Access-Control-Allow-Methods, Access-Control-Allow-Origin, Access-Control-Allow-Headers",
+      "Content-Type, Authorization, X-Requested-With, email, customer, Access-Control-Allow-Methods, Access-Control-Allow-Origin, Access-Control-Allow-Headers",
   })
 );
 app.use(express.json());
@@ -349,10 +349,20 @@ app.get("/profile", isLoggedIn, (req, res) => {
   }
 });
 
-app.get("/account", isLoggedIn, (req, res) => {
-  
+app.get("/account", isLoggedIn, async (req, res) => {
   if (req.user) {
-    res.json({ user: req.user });
+    try {
+      const userData = await UserService.getUserByEmail(req.user.email); // Fetch user data from the database using the user's email
+
+      if (userData) {
+        res.json({ user: userData });
+      } else {
+        res.status(404).json({ message: "User not found" });
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      res.status(500).json({ message: "Error fetching user data" });
+    }
   } else {
     res.status(404).json({ message: "User not found" });
   }
@@ -600,22 +610,21 @@ app.post("/billing", setCurrentUser, async (req, res) => {
   console.log("Session email:", req.session.email); // Added console.log for session email
   console.log("Email from header:", req.headers.email); // Added console.log for email from header
 
-  const { email } = req.body;
+  const { email, customer } = req.body;
 
-  try {
-    const userEmail = req.body.email;
-    const user = await UserService.getUserByEmail({ email });
-    const { customer } = req.body;
-    console.log("customer", customer);
+   try {
+     const userEmail = req.body.email;
+     const user = await UserService.getUserByEmail({ email });
+     const { customer } = req.body;
+     console.log("customer", customer);
 
-    const session = await Stripe.createBillingSession(customer);
-    console.log("session", session);
-    //res.redirect('https://billing.stripe.com/p/login/test_3csdU4cnx1S41mo288');
-    res.json({ url: session.url });
-  } catch (error) {
-    console.error("Error in /billing route:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
+     const session = await Stripe.createBillingSession(customer);
+     console.log("session", session);
+     res.json({ url: session.url });
+   } catch (error) {
+     console.error("Error in /billing route:", error);
+     res.status(500).json({ error: "Internal server error" });
+   }
 });
 
 app.get("/user/:username", async (req, res) => {
