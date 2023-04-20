@@ -33,7 +33,7 @@ import { AuthContext } from "../AuthContext.jsx";
   const [loading, setLoading] = useState(false);
   const [imageList, setImageList] = useState([]);
 
-  
+ 
 const base64ToBlob = (base64) => {
   const base64Data = base64.replace(/^data:image\/(png|jpg);base64,/, '');
   const binary = atob(base64Data);
@@ -43,6 +43,63 @@ const base64ToBlob = (base64) => {
   }
   return new Blob([array], { type: 'image/png' });
 };
+
+const addWatermarkToImage = async (base64Image, watermarkText, watermarkImageUrl) => {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.src = 'data:image/png;base64,' + base64Image; // Add the data format prefix here
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = image.width;
+      canvas.height = image.height;
+
+      // Draw the image
+      ctx.drawImage(image, 0, 0);
+
+      // Load the watermark image
+      const watermarkImage = new Image();
+      watermarkImage.src = watermarkImageUrl;
+      watermarkImage.onload = () => {
+        // Calculate watermark image position
+        const imageX = 10; // Customize X position
+        const imageY = image.height - watermarkImage.height - 10; // Customize Y position
+
+        // Draw the watermark image
+        ctx.drawImage(watermarkImage, imageX, imageY);
+
+        // Set watermark text properties
+        ctx.font = '24px Arial'; // Customize font size and family
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Customize text color and opacity
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+
+        // Calculate watermark text position
+        const textX = imageX + watermarkImage.width + 5; // Customize X position
+        const textY = imageY + watermarkImage.height / 2; // Center the text vertically with the image
+
+        // Draw the watermark text
+        ctx.fillText(watermarkText, textX, textY);
+
+        // Get the base64-encoded image with watermark
+        const base64ImageWithWatermark = canvas.toDataURL('image/png');
+        resolve(base64ImageWithWatermark);
+      };
+
+      watermarkImage.onerror = (error) => {
+        console.error('Watermark image loading error:', error);
+        reject(error);
+      };
+    };
+
+    image.onerror = (error) => {
+      console.error('Base64 image loading error:', error);
+      reject(error);
+    };
+  });
+};
+
+
 
 const downloadAllImages = async () => {
   if (form.photo && form.photo.length > 0) {
@@ -69,7 +126,7 @@ const downloadAllImages = async () => {
   };
 
 
-  
+ 
 const handleChange = (e) => {
   const { name, value } = e.target;
   setForm({ ...form, [name]: value });
@@ -151,7 +208,7 @@ const generateImage = async () => {
       alert("Low token balance. Get 10 free tokens by signing up, or buy more tokens.");
       return;
     }
-    
+   
     try {
       setGeneratingImg(true);
 
@@ -189,30 +246,36 @@ const generateImage = async () => {
   throw new Error(data.error);
 }
 
-// Check if there are any images in the response
 if (data.images && data.images.length > 0) {
+  const watermarkText = 'dreambrainai.com';
+  const watermarkImageUrl = 'https://dreambrainai.com/favicon.ico'; // Replace this with the URL to your watermark image
+
   // Create an array to hold the object URLs of all images
-  const imageUrls = data.images.map((image) => {
-    const blob = base64ToBlob(image);
-    return URL.createObjectURL(blob);
-  });
+  const imageUrls = await Promise.all(
+    data.images.map(async (image) => {
+      const base64ImageWithWatermark = await addWatermarkToImage(image, watermarkText, watermarkImageUrl);
+      const blob = base64ToBlob(base64ImageWithWatermark);
+      return URL.createObjectURL(blob);
+    })
+  );
 
   // Update the form.photo state with the new array of image URLs
   setForm({ ...form, photo: imageUrls });
 
   // Emit the tokenBalanceUpdate event
   const actualTokensSubtracted = data.tokensSubtracted;
-const newBalance = props.tokenBalance - actualTokensSubtracted;
+  const newBalance = props.tokenBalance - actualTokensSubtracted;
 
-if (newBalance < 0) {
-  console.error('Unexpected negative token balance:', newBalance);
-}
+  if (newBalance < 0) {
+    console.error('Unexpected negative token balance:', newBalance);
+  }
 
-emitTokenBalanceUpdate(newBalance);
-props.getTokenBalance();
+  emitTokenBalanceUpdate(newBalance);
+  props.getTokenBalance();
 } else {
   throw new Error('No images were generated.');
 }
+
 
 
 } catch (err) {
@@ -233,7 +296,7 @@ props.getTokenBalance();
     const newValue = e.target.value;
     onChange(step, newValue);
   };
-  
+ 
 };
 
 
@@ -299,7 +362,7 @@ return (
       </p>
      </div>
 
-  
+ 
 
   <form className="mt-16 max-w-3xl" onSubmit={handleSubmit} enctype="multipart/form-data">
   <div className="flex flex-col gap-5">
@@ -322,7 +385,7 @@ return (
             </option>
           ))}
       </select>
-      
+     
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
           <svg
             className="h-4 w-4 fill-current"
@@ -339,7 +402,7 @@ return (
       </div>
       </div>
 
-      
+     
 
 <div className="relative bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full h-full flex justify-center items-center flex-wrap">
   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 w-full">
@@ -400,12 +463,12 @@ return (
         isSuggestedNegativePrompt
         handleSuggestedNegativePrompt={handleSuggestedNegativePrompt}
 
-            
+           
 
-      /> 
+      />
 
               <div className="flex flex-col gap-5">
-      
+     
       <label htmlFor="sampling_index" className="text-gray-900 font-medium">
         Sampling method
       </label>
@@ -608,8 +671,8 @@ return (
   Download All Images
 </button>
 
-          
-        
+         
+       
 
         <div className="mt-5 flex gap-5">
           <button
