@@ -10,6 +10,8 @@ async function fetchData(endpoint) {
       },
     });
 
+    console.log("API response:", res.status, res.statusText); // Log the response status and statusText
+
     if (res.status === 404) {
       console.error("User not found");
       return null;
@@ -17,12 +19,19 @@ async function fetchData(endpoint) {
 
     const data = await res.json();
     console.log("Fetched data:", data);
+
+    if (!data.user) {
+      console.error("User property not found in the API response");
+      return null;
+    }
+
     return data.user;
   } catch (error) {
     console.error("Failed to get data", error);
     return null;
   }
 }
+
 export default function useCustomer(endpoint) {
   const [data, setData] = useState(null);
 
@@ -39,6 +48,8 @@ export default function useCustomer(endpoint) {
     if (process.env.NODE_ENV === "development") {
       endpoint = endpoint.replace("https://", "http://");
     }
+
+    console.log("Endpoint URL:", endpoint); // Log the endpoint URL
 
     fetchData(endpoint).then((fetchedData) => {
       setData(fetchedData);

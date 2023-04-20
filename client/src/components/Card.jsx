@@ -8,7 +8,7 @@ const Card = ({ _id, name, prompt, negativePrompt, checkpoint, steps, samplingMe
   const [downvotes, setDownvotes] = useState(initialDownvotes);
 
   const handleUpvote = async () => {
-    const response = await fetch(`http://localhost:8080/post/${_id}/upvote`, { method: 'PUT' });
+    const response = await fetch(`${import.meta.env.VITE_APP_URL}/post/${_id}/upvote`, { method: 'PUT' });
 
     
     const data = await response.json();
@@ -16,7 +16,7 @@ const Card = ({ _id, name, prompt, negativePrompt, checkpoint, steps, samplingMe
   };
 
   const handleDownvote = async () => {
-    const response = await fetch(`http://localhost:8080/post/${_id}/downvote`, { method: 'PUT' });
+    const response = await fetch(`${import.meta.env.VITE_APP_URL}/post/${_id}/downvote`, { method: 'PUT' });
 
     const data = await response.json();
     setDownvotes(data.downvotes);

@@ -6,10 +6,15 @@ const BlogPost = () => {
       <h1 className="text-4xl font-semibold mb-6">Welcome to Humble Diffusion</h1>
       <div className="bg-white shadow-md rounded-lg p-6 mb-8">
         <p className="text-gray-700 mb-4">
-          Welcome to Humble Diffusion. I built this app to make stable diffusion more acessible. 
+          Welcome to Dream Brain AI. your go-to destination for stunning AI-generated art. If you're a fan of AI art generation, you're in for a treat. Our platform offers an incredible collection of 400 high-quality images for only 10$ - that's half the price of a mid-journey.
+
+With Stable Diffusion, you'll have access to dozens of checkpoints to help you create your perfect AI-generated image. And the best part? We don't have an NSFW filter, so you can let your creativity run wild.
+
+Our platform is incredibly easy to use, even for beginners. You'll be generating beautiful AI art in no time. And once you've created your masterpiece, you can share it with our vibrant community of like-minded artists.
+
+Join Dream Brain today and experience the thrill of creating stunning AI-generated art. Sign up now and start exploring our incredible collection of images! 
 
           
-          It's a work in progress, and I hope you find it useful. If you have questions or need help please email dreambrainai@gmail.com
           <p className="text-gray-700 mb-4">
           -Big D       
           </p>

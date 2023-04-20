@@ -134,7 +134,7 @@ const generateImage = async () => {
   // Check if the user is logged in using authToken
   const authToken = localStorage.getItem("authToken");
 
-  const res = await fetch("http://localhost:8080/profile", {
+  const res = await fetch(`${import.meta.env.VITE_APP_URL}/profile`, {
     headers: {
       Authorization: `Bearer ${authToken}`,
     },
@@ -165,7 +165,7 @@ const generateImage = async () => {
 
       console.log('Request headers:', headers);
 
-      const response = await fetch('http://localhost:8080/api/v1/runpod', {
+      const response = await fetch(`${import.meta.env.VITE_APP_URL}/api/v1/runpod`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -266,7 +266,7 @@ const handleSubmit = async (e) => {
 
         formData.append("photo", file);
 
-        const postResponse = await fetch("http://localhost:8080/api/v1/post", {
+        const postResponse = await fetch(`${import.meta.env.VITE_APP_URL}/api/v1/post`, {
           method: "POST",
           body: formData,
         });

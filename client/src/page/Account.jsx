@@ -7,7 +7,9 @@ import Stripe from "stripe";
 
 const Account = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const customer = useCustomer('https://localhost:8080/account');
+  const customer = useCustomer(`${import.meta.env.VITE_APP_URL}/account`);
+
+   console.log("Fetched customer data:", customer); // Log the fetched customer data
 
   const handleProductSelection = (event) => {
     setSelectedProduct(event.target.value);
@@ -24,7 +26,7 @@ const Account = () => {
 
   let stripe;
   try {
-    stripe = await loadStripe("pk_test_LFl6r8t36e0jVZElE4YwlT2Y00mulyi0Qt");
+    stripe = await loadStripe("pk_live_hf1Ex1wdA9wiXi5XzQ5PvADY00OFswyUrG");
     console.log('Stripe instance:', stripe);
   } catch (error) {
     console.error('Error loading Stripe:', error);
@@ -32,7 +34,7 @@ const Account = () => {
   }
   console.log("Email being sent in headers:", customer.email);
   const customerID = customer.billingID; // Use 'customer' instead of 'user'
-  const response = await fetch("http://localhost:8080/checkout", {
+  const response = await fetch(`${import.meta.env.VITE_APP_URL}/checkout`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -53,26 +55,27 @@ const Account = () => {
 
 const handleManageBilling = async (event) => {
   event.preventDefault();
-
-  if (!customer) return;
-
+  if (!customer || !customer.billingID) { // Check if customer or billingID is missing
+    console.log("Customer or billing ID is missing.");
+    return;
+  }
   try {
     const requestOptions = {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    email: customer.email,
-    // Add the following headers to enable CORS
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PATCH, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Origin, Content-Type, X-Auth-Token",
-  },
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        email: customer.email,
+        "Access-Control-Allow-Origin": "*", // Allow requests from any origin
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS", // Allow specific HTTP methods
+        "Access-Control-Allow-Headers":
+          "authorization, content-type, x-auth-token" // Allow specific headers
+      },
       body: JSON.stringify({
         customer: customer.billingID,
       }),
     };
     
-    const response = await fetch("http://localhost:8080/billing", requestOptions);
+    const response = await fetch(`${import.meta.env.VITE_APP_URL}/billing`, requestOptions);
     const result = await response.json();
     window.location.replace(result.url);
 
@@ -91,8 +94,9 @@ const handleManageBilling = async (event) => {
   if (!customer) {
     return <div>Loading...</div>;
   }
+  
 
- return (
+return (
   <div className="flex flex-col min-h-screen">
     {/* Begin page content */}
     <main className="flex-grow px-4 py-8">

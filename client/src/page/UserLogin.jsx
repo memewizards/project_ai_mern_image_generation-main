@@ -6,7 +6,7 @@ const UserLogin = () => {
 
   const handleGoogleLogin = (e) => {
     e.preventDefault();
-    window.location.href = "http://localhost:8080/auth/google";
+    window.location.href = `${import.meta.env.VITE_APP_URL}/auth/google`;
   };
 
   const handleSubmit = async (e) => {
@@ -16,7 +16,7 @@ const UserLogin = () => {
 
     try {
       // send a POST request to /login with the email in the form data
-      const response = await fetch("http://localhost:8080/userLogin", {
+      const response = await fetch(`${import.meta.env.VITE_APP_URL}/userLogin`, {
         method: "POST",
         body: JSON.stringify({ email }),
         headers: { "Content-Type": "application/json" },

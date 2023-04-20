@@ -5,7 +5,7 @@ export const useUserData = (updateTokenBalance) => {
   const [user, setUser] = useState(null);
   const [tokenBalance, setTokenBalance] = useState(0);
   const [isUserFetched, setIsUserFetched] = useState(false);
-  const profile = useCustomer("https://localhost:8080/profile");
+  const profile = useCustomer(`${import.meta.env.VITE_APP_URL}/profile`);
 
   useEffect(() => {
     if (profile) {

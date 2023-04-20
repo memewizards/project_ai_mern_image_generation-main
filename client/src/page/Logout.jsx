@@ -14,7 +14,7 @@ const Logout = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/logout', {
+      const response = await fetch(`${import.meta.env.VITE_APP_URL}/api/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

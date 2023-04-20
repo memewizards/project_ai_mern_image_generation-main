@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import useCustomer from "../hooks/useCustomer";
 
 const Profile = () => {
+  
   const [user, setUser] = useState(null);
   const [tokenBalance, setTokenBalance] = useState(0);
-  const profile = useCustomer("https://localhost:8080/profile");
+  const profile = useCustomer(`${import.meta.env.VITE_APP_URL}/profile`);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -29,7 +30,7 @@ const Profile = () => {
     const authToken = localStorage.getItem("authToken");
     console.log("the auth token is: ", authToken)
 
-    fetch(`http://localhost:8080/subtract-tokens`, {
+    fetch(`${import.meta.env.VITE_APP_URL}/subtract-tokens`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${authToken}`,
@@ -54,7 +55,7 @@ const Profile = () => {
   const handleCheckBalance = () => {
     const authToken = localStorage.getItem('authToken');
 
-    fetch(`http://localhost:8080/getTokenBalance?email=${user.email}`, {
+    fetch(`${import.meta.env.VITE_APP_URL}/getTokenBalance?email=${user.email}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${authToken}`
@@ -108,7 +109,7 @@ const Profile = () => {
               </div>
             </div>
           ) : (
-            <h1 className="text-2xl">User not found</h1>
+            <h1 className="text-2xl">User not found. You can try refreshing the page.</h1>
           )}
         </div>
       </main>

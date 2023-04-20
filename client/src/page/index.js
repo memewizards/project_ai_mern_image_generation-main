@@ -11,6 +11,7 @@ import ProPlan from "./ProPlan";
 import userProfile from "./userProfile";
 import Blog from "./Blog";
 import Logout from "./Logout";
+import NotFound from "./NotFound";
 
 
 
@@ -28,4 +29,5 @@ export {
   userProfile,
   Blog,
   Logout,
+  NotFound,
 };

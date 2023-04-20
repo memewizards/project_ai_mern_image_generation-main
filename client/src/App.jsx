@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
-import { AuthProvider } from "./AuthContext"
+import { AuthProvider } from "./AuthContext";
 import {
   Home,
   CreatePost,
@@ -14,6 +14,7 @@ import {
   None,
   Blog,
   Logout,
+  NotFound,
 } from "./page";
 import { logo } from "./assets";
 import { profileIcon } from "./assets";
@@ -69,7 +70,7 @@ const App = () => {
   const handleCheckBalance = () => {
     const authToken = localStorage.getItem("authToken");
 
-    fetch(`http://localhost:8080/getTokenBalance?email=${user.email}`, {
+    fetch(`${import.meta.env.VITE_APP_URL}/getTokenBalance?email=${user.email}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${authToken}`,
@@ -100,16 +101,22 @@ const App = () => {
      <header className="w-full flex justify-between items-center bg-white sm:px-8 px-4 py-4 border-b border-b-[#e6ebf4]">
     <div className="relative flex items-center">
       <Link to="/Blog">
-        <button className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-full mr-4">
-          Blog
-        </button>
-      </Link>
-      <Link to="/ImageGenerator">
-        <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full">
-          Create
-        </button>
-      </Link>
-    </div>
+       <button className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded-full mr-4">
+                Blog
+              </button>
+            </Link>
+            <Link to="/ImageGenerator">
+              <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full mr-4">
+                Create
+              </button>
+            </Link>
+            {/* Add Home button */}
+            <Link to="/">
+              <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full">
+                Feed
+              </button>
+            </Link>
+          </div>
     <div>
       <Link to="/">
         <img src={logo} alt="logo" className="w-28 object-contain" />
@@ -159,7 +166,7 @@ const App = () => {
   </header>
 
         
-      <main className="sm:p-8 px-4 py-8 w-full bg-[#f9fafe] min-h-[calc(100vh-73px)]">
+           <main className="sm:p-8 px-4 py-8 w-full bg-[#f9fafe] min-h-[calc(100vh-73px)]">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/create-post" element={<CreatePost />} />
@@ -176,6 +183,7 @@ const App = () => {
           <Route path="/userProfile" element={<userProfile />} />
           <Route path="/checkout" element={<checkout />} />
           <Route path="/createBillingSession" element={<createBillingSession />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
     </BrowserRouter>
