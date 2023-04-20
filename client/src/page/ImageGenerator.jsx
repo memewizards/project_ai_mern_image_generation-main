@@ -44,10 +44,10 @@ const base64ToBlob = (base64) => {
   return new Blob([array], { type: 'image/png' });
 };
 
-const addWatermarkToImage = async (base64Image, watermarkText, watermarkImageUrl) => {
+const addWatermarkToImage = async (base64Image, watermarkText) => {
   return new Promise((resolve, reject) => {
     const image = new Image();
-    image.src = 'data:image/png;base64,' + base64Image; // Add the data format prefix here
+    image.src = 'data:image/png;base64,' + base64Image;
     image.onload = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
@@ -57,47 +57,31 @@ const addWatermarkToImage = async (base64Image, watermarkText, watermarkImageUrl
       // Draw the image
       ctx.drawImage(image, 0, 0);
 
-      // Load the watermark image
-      const watermarkImage = new Image();
-      watermarkImage.src = watermarkImageUrl;
-      watermarkImage.onload = () => {
-        // Calculate watermark image position
-        const imageX = 10; // Customize X position
-        const imageY = image.height - watermarkImage.height - 10; // Customize Y position
+      // Set watermark text properties
+      const fontSize = 16;
+      ctx.font = `${fontSize}px Arial Rounded MT`; // Change the font size and family
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Customize text color and opacity
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
 
-        // Draw the watermark image
-        ctx.drawImage(watermarkImage, imageX, imageY);
+      // Calculate watermark text position
+      const textX = 10; // Customize X position
+      const textY = image.height - fontSize - 10; // Customize Y position
 
-        // Set watermark text properties
-        ctx.font = '24px Arial'; // Customize font size and family
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Customize text color and opacity
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
+      // Draw the watermark text
+      ctx.fillText(watermarkText, textX, textY);
 
-        // Calculate watermark text position
-        const textX = imageX + watermarkImage.width + 5; // Customize X position
-        const textY = imageY + watermarkImage.height / 2; // Center the text vertically with the image
-
-        // Draw the watermark text
-        ctx.fillText(watermarkText, textX, textY);
-
-        // Get the base64-encoded image with watermark
-        const base64ImageWithWatermark = canvas.toDataURL('image/png');
-        resolve(base64ImageWithWatermark);
-      };
-
-      watermarkImage.onerror = (error) => {
-        console.error('Watermark image loading error:', error);
-        reject(error);
-      };
+      // Get the base64-encoded image with watermark
+      const base64ImageWithWatermark = canvas.toDataURL('image/png');
+      resolve(base64ImageWithWatermark);
     };
 
     image.onerror = (error) => {
-      console.error('Base64 image loading error:', error);
       reject(error);
     };
   });
 };
+
 
 
 
@@ -248,12 +232,11 @@ const generateImage = async () => {
 
 if (data.images && data.images.length > 0) {
   const watermarkText = 'dreambrainai.com';
-  const watermarkImageUrl = 'https://dreambrainai.com/favicon.ico'; // Replace this with the URL to your watermark image
 
   // Create an array to hold the object URLs of all images
   const imageUrls = await Promise.all(
     data.images.map(async (image) => {
-      const base64ImageWithWatermark = await addWatermarkToImage(image, watermarkText, watermarkImageUrl);
+      const base64ImageWithWatermark = await addWatermarkToImage(image, watermarkText);
       const blob = base64ToBlob(base64ImageWithWatermark);
       return URL.createObjectURL(blob);
     })
