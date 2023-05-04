@@ -15,10 +15,14 @@ import {
   Blog,
   Logout,
   NotFound,
+  NewPage,
 } from "./page";
 import { logo } from "./assets";
 import { profileIcon } from "./assets";
 import { useUserData } from "./hooks/useUserData";
+
+
+
 
 const emitTokenBalanceUpdate = (newBalance) => {
     const event = new CustomEvent("tokenBalanceUpdate", { detail: newBalance });
@@ -183,6 +187,9 @@ const App = () => {
           <Route path="/userProfile" element={<userProfile />} />
           <Route path="/checkout" element={<checkout />} />
           <Route path="/createBillingSession" element={<createBillingSession />} />
+          <Route path="/new-page" element={<NewPage />} />
+
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

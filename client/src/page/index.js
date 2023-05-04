@@ -13,6 +13,7 @@ import Blog from "./Blog";
 import Logout from "./Logout";
 import NotFound from "./NotFound";
 
+import NewPage from './NewPage';
 
 
 export {
@@ -30,4 +31,5 @@ export {
   Blog,
   Logout,
   NotFound,
+  NewPage,
 };
