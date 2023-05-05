@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { preview } from '../assets';
 import { getRandomPrompt } from '../utils';
@@ -6,12 +6,15 @@ import { FormField, Loader } from '../components';
 import useCustomer from "../hooks/useCustomer";
 import fs from 'fs';
 import path from 'path';
-import { useContext } from "react";
 import { AuthContext } from "../AuthContext.jsx";
+
+
+
 
 
   const ImageGenerator = (props) => {
   const navigate = useNavigate();
+  const fileInput = useRef(null);
   const { isLoggedIn, tokenBalance } = useContext(AuthContext);
   const [form, setForm] = useState({
     name: '',
@@ -32,6 +35,7 @@ import { AuthContext } from "../AuthContext.jsx";
   const [generatingImg, setGeneratingImg] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageList, setImageList] = useState([]);
+  const [uploadedPhoto, setUploadedPhoto] = useState(null);
 
  
 const base64ToBlob = (base64) => {
@@ -182,16 +186,21 @@ const generateImage = async () => {
     credentials: "include",
   });
 
-  if (res.status === 404) {
-    console.log("User is not logged in");
+  if (!form.sampling_index) {
+    alert('Please select a sampling method!');
     return;
   }
 
+  // if (res.status === 404) {
+  //   console.log("User is not logged in");
+  //   return;
+  // }
+
   if (form.prompt) {
-    if (props.tokenBalance <= 0) { // Add this check for token balance
-      alert("Low token balance. Get 10 free tokens by signing up, or buy more tokens.");
-      return;
-    }
+    // if (props.tokenBalance <= 0) { // Add this check for token balance
+    //   alert("Low token balance. Get 10 free tokens by signing up, or buy more tokens.");
+    //   return;
+    //}
    
     try {
       setGeneratingImg(true);
@@ -206,7 +215,7 @@ const generateImage = async () => {
 
       console.log('Request headers:', headers);
 
-      const response = await fetch(`${import.meta.env.VITE_APP_URL}/api/v1/runpod`, {
+      const response = await fetch(`http://localhost:8080/api/v1/runpod`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -333,6 +342,21 @@ const handleSubmit = async (e) => {
 };
 
 
+const onDrop = (event) => {
+  event.preventDefault();
+  const file = event.dataTransfer.files[0];
+  handleFileUpload(file);
+};
+
+const handleFileUpload = (file) => {
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const imgData = event.target.result;
+    // Update the uploadedPhoto state instead of form.photo
+    setUploadedPhoto(imgData);
+  };
+  reader.readAsDataURL(file);
+};
 
 
 
@@ -383,38 +407,87 @@ return (
           </svg>
         </div>
       </div>
+      
       </div>
 
      
 
-<div className="relative bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full h-full flex justify-center items-center flex-wrap">
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 w-full">
-    {form.photo ? (
-      form.photo.map((image, index) => (
-        <div key={`image-container-${index}`}>
+      <div className="flex justify-between items-center">
+      <div className="w-1/2">
+  <div
+    onDragOver={(event) => event.preventDefault()}
+    onDrop={onDrop}
+    className="relative bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full h-full flex justify-center items-center flex-wrap"
+  >
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(event) => handleFileUpload(event.target.files[0])}
+      style={{ display: "none" }}
+      ref={fileInput}
+    />
+    <div
+      onClick={() => fileInput.current.click()}
+      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 w-full"
+    >
+      {uploadedPhoto ? (
+        <img
+          src={uploadedPhoto}
+          alt="uploaded"
+          className="w-full h-auto object-contain"
+        />
+      ) : (
+        <>
           <img
-            key={`image-${index}`}
-            src={image}
-            alt={form.prompt}
-            className="w-full h-auto object-contain"
+            src={preview}
+            alt="preview"
+            className="w-9/12 h-9/12 object-contain opacity-40"
           />
-        </div>
-      ))
-    ) : (
-      <img
-        src={preview}
-        alt="preview"
-        className="w-9/12 h-9/12 object-contain opacity-40"
-      />
-    )}
-  </div>
-
-  {generatingImg && (
-    <div className="absolute inset-0 z-0 flex justify-center items-center bg-[rgba(0,0,0,0.5)] rounded-lg">
-      <Loader />
+          <div className="absolute text-center w-full">
+            <p className="text-gray-500">Drop Image Here -or- Click to Upload</p>
+          </div>
+        </>
+      )}
     </div>
-  )}
+  </div>
 </div>
+
+
+<div className="w-1/2">
+  <div className="relative bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full h-full flex justify-center items-center flex-wrap">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 w-full">
+      {form.photo
+        ? form.photo.map((image, index) => (
+            <div key={`image-container-${index}`}>
+              <img
+                key={`image-${index}`}
+                src={image}
+                alt={form.prompt}
+                className="w-full h-auto object-contain"
+              />
+            </div>
+          ))
+        : (
+          <img
+            src={preview}
+            alt="preview"
+            className="w-9/12 h-9/12 object-contain opacity-40"
+          />
+        )}
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+{generatingImg && (
+  <div className="absolute inset-0 z-0 flex justify-center items-center bg-[rgba(0,0,0,0.5)] rounded-lg">
+    <Loader />
+  </div>
+)}
+
+
 
       <FormField
         labelName="Your Name"
