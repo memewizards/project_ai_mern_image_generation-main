@@ -354,7 +354,7 @@ const NewPage = () => {
             </p>
           </div>
           <div className="home-buttons1">
-            <a href="http://localhost:5173/UserLogin" className="home-get-started2 button">
+            <a href="https://dreambrainai.com/UserLogin" className="home-get-started2 button">
               <span className="home-text23">Start Your Free Trial</span>
             </a>
           </div>
@@ -398,7 +398,7 @@ const NewPage = () => {
                   </p>
                 </div>
                 <div className="home-buy-details">
-                  <div className="home-buy button" onClick={() => window.location.href = "http://localhost:5173/UserLogin"}>
+                  <div className="home-buy button" onClick={() => window.location.href = "https://dreambrainai.com/UserLogin"}>
                     <span className="home-text24">
                       <span>Start Basic</span>
                       <br />

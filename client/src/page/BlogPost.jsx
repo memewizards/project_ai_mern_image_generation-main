@@ -3,7 +3,7 @@ import React from 'react';
 const BlogPost = () => {
   return (
     <div className="max-w-4xl mx-auto mt-10 px-4">
-      <h1 className="text-4xl font-semibold mb-6">Welcome to Humble Diffusion</h1>
+      <h1 className="text-4xl font-semibold mb-6">Welcome to Dream Brain AI!</h1>
       <div className="bg-white shadow-md rounded-lg p-6 mb-8">
         <p className="text-gray-700 mb-4">
           Welcome to Dream Brain AI. your go-to destination for stunning AI-generated art. If you're a fan of AI art generation, you're in for a treat. Our platform offers an incredible collection of 400 high-quality images for only 10$ - that's half the price of a mid-journey.

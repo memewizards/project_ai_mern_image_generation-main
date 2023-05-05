@@ -147,7 +147,7 @@ const sortPosts = (posts) => {
 
       <section className={`max-w-7xl mx-auto ${showWarning ? 'blur' : ''}`}>
         <div>
-          <h1 className="font-extrabold text-[#222328] text-[32px]">Welcome to Humble Diffusion</h1>
+          <h1 className="font-extrabold text-[#222328] text-[32px]">Welcome to Dream Brain AI!</h1>
           <p className="mt-2 text-[#666e75] text-[14px] max-w-[500px]">Welcome to the community feed.</p>
         </div>
 

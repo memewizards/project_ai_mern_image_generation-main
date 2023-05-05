@@ -17,9 +17,10 @@ import {
   NotFound,
   NewPage,
 } from "./page";
-import { logo } from "./assets";
+//import { logo } from "./assets";
 import { profileIcon } from "./assets";
 import { useUserData } from "./hooks/useUserData";
+import { useLocation } from "react-router-dom";
 
 
 
@@ -115,16 +116,16 @@ const App = () => {
               </button>
             </Link>
             {/* Add Home button */}
-            <Link to="/">
+            <Link to="/Home">
               <button className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full">
-                Feed
+                Community Showcase
               </button>
             </Link>
           </div>
     <div>
-      <Link to="/">
+      {/* <Link to="/">
         <img src={logo} alt="logo" className="w-28 object-contain" />
-      </Link>
+      </Link> */}
     </div>
 
 
@@ -172,7 +173,7 @@ const App = () => {
         
            <main className="sm:p-8 px-4 py-8 w-full bg-[#f9fafe] min-h-[calc(100vh-73px)]">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<NewPage />} />
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/ImageGenerator" element={<ImageGenerator tokenBalance={tokenBalance} getTokenBalance={handleCheckBalance} />} />
           <Route path="/UserLogin" element={<UserLogin />} />
@@ -187,7 +188,8 @@ const App = () => {
           <Route path="/userProfile" element={<userProfile />} />
           <Route path="/checkout" element={<checkout />} />
           <Route path="/createBillingSession" element={<createBillingSession />} />
-          <Route path="/new-page" element={<NewPage />} />
+          <Route path="/welcome" element={<NewPage />} />
+          <Route path="/Home" element={<Home />} />
 
 
           <Route path="*" element={<NotFound />} />
