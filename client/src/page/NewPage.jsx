@@ -47,12 +47,20 @@ const NewPage = () => {
           <div className="navbar-nav-links">
             <span className="navbar-link nav-link">Features</span>
             <span className="nav-link">Why us</span>
-            <span className="nav-link">Prices</span>
+            <a href="#" className="nav-link" onClick={() => {
+  const pricingSection = document.querySelector('.section-head');
+  pricingSection.scrollIntoView({ behavior: 'smooth' });
+}}>
+  Prices
+</a>
+
+           
             <span className="nav-link">Contact</span>
           </div>
-          <div className="get-started navbar-get-started">
+          <div className="get-started navbar-get-started" onClick={() => {window.location.href="/UserLogin"}}>
             <span className="navbar-text">Get started</span>
           </div>
+          
           <div id="open-mobile-menu" className="navbar-hamburger get-started">
             <img
               alt="image"
@@ -77,7 +85,12 @@ const NewPage = () => {
           <div className="navbar-nav-links1">
             <span className="nav-link">Features</span>
             <span className="nav-link">Why us</span>
-            <span className="nav-link">Prices</span>
+            <a href="#" className="nav-link" onClick={() => {
+  const pricingSection = document.querySelector('.section-head');
+  pricingSection.scrollIntoView({ behavior: 'smooth' });
+}}>
+  Prices
+</a>
             <span className="nav-link">Contact</span>
           </div>
           <div className="get-started">
@@ -113,13 +126,14 @@ const NewPage = () => {
                 Fast, intuitive, limitless, and fun.&nbsp;&nbsp;
               </span>
               <div className="home-buttons">
-                <div className="home-get-started button">
-                  <span className="home-text">Get started</span>
-                </div>
-                <div className="home-get-started1 button">
-                  <span className="home-text01">View features</span>
-                </div>
-              </div>
+            <div className="home-get-started button" onClick={() => {window.location.href="/UserLogin"}}>
+              <span className="home-text">Get started</span>
+            </div>
+            
+            <div className="home-get-started1 button">
+              <a href="#features-section"><span className="home-text01">View features</span></a>
+            </div>
+          </div>
             </main>
             <div className="home-highlight">
               <div className="home-avatars">
@@ -146,15 +160,15 @@ const NewPage = () => {
           </div>
         </div>
       </section>
-      <section className="home-section01">
-        <h2 className="home-text02">Create Anything You Can Imagine.</h2>
-        <div className="home-features">
-          <header className="feature feature-active home-feature">
-            <h3 className="home-text03">Beautiful Images</h3>
-            <p className="home-text04">
-              Cutting-edge AI software at your fingertips.&nbsp;&nbsp;
-            </p>
-          </header>
+      <section className="home-section01" id="features-section">
+  <h2 className="home-text02">Create Anything You Can Imagine.</h2>
+  <div className="home-features">
+    <header className="feature feature-active home-feature">
+      <h3 className="home-text03">Beautiful Images</h3>
+      <p className="home-text04">
+        Cutting-edge AI software at your fingertips.&nbsp;&nbsp;
+      </p>
+    </header>
           <header className="feature home-feature1">
             <h3 className="home-text05">No Limits</h3>
             <p className="home-text06">
@@ -340,10 +354,11 @@ const NewPage = () => {
             </p>
           </div>
           <div className="home-buttons1">
-            <div className="home-get-started2 button">
+            <a href="http://localhost:5173/UserLogin" className="home-get-started2 button">
               <span className="home-text23">Start Your Free Trial</span>
-            </div>
+            </a>
           </div>
+          
         </main>
       </section>
       <section className="home-section05">
@@ -383,12 +398,13 @@ const NewPage = () => {
                   </p>
                 </div>
                 <div className="home-buy-details">
-                  <div className="home-buy button">
+                  <div className="home-buy button" onClick={() => window.location.href = "http://localhost:5173/UserLogin"}>
                     <span className="home-text24">
                       <span>Start Basic</span>
                       <br />
                     </span>
                   </div>
+                
                   <div className="home-features1">
                     <span className="home-heading06">You will get</span>
                     <div className="home-list">
@@ -488,12 +504,13 @@ const NewPage = () => {
                   </p>
                 </div>
                 <div className="home-buy-details1">
-                  <div className="home-buy1 button">
+                  <a href="/UserLogin" className="home-buy1 button">
                     <span className="home-text27">
                       <span>Start Professional</span>
                       <br />
                     </span>
-                  </div>
+                  </a>
+                  
                   <div className="home-features2">
                     <span className="home-heading07">You will get</span>
                     <div className="home-list1">
@@ -1051,9 +1068,10 @@ const NewPage = () => {
               </p>
             </div>
             <div className="home-buttons2">
-              <div className="home-get-started3 button">
+              <a href="/UserLogin" className="home-get-started3 button">
                 <span className="home-text39">Get A Free Trial</span>
-              </div>
+              </a>
+              
             </div>
           </main>
         </section>
