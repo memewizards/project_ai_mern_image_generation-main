@@ -92,7 +92,7 @@ router.post(
 
         break;
       }
-
+        //remove the logic that gives user token for creating subscription and only use invoice.paid to trigger token adding.
       case "customer.subscription.created": {
         const user = await UserService.getUserByBillingID(data.customer);
         console.log("the user's subscription was created.", data.customer);
@@ -188,7 +188,7 @@ router.post(
 app.use("/webhook", router);
 app.use(
   cors({
-    origin: ["https://dreambrainai.com", "http://localhost:5173"],
+    origin: ["https://dreambrainai.com", "http://localhost:5173", "/localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowedHeaders:
@@ -196,8 +196,8 @@ app.use(
   })
 );
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 //app.use(cookieParser());
 app.use(flash());
 

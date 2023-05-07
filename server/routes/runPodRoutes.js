@@ -18,24 +18,25 @@ router.post("/", async (req, res) => {
     const status_endpoint_template = `https://api.runpod.ai/v1/${selectedckpt}/status/`;
 
     // Get prompt and negative_prompt from the request
-    const { prompt, negative_prompt } = req.body;
-    
-    const input = {
-      input: {
-        prompt: prompt.trim(),
-        negative_prompt: negative_prompt.trim(),
-        steps: parseInt(req.body.steps) || 12,
-        width: parseInt(req.body.width) || 312,
-        height: parseInt(req.body.height) || 512,
-        restore_faces: true,
-        cfg_scale: parseInt(req.body.cfg_scale) || 5,
-        seed: parseInt(req.body.seed),
-        sampler_index: req.body.sampler_index,
-        batch_size: req.body.batch_size,
-      },
-      
-    };
-    
+  const { prompt, negative_prompt } = req.body;
+  
+  const input = {
+    input: {
+      task: req.body.task,
+      prompt: prompt.trim(),
+      negative_prompt: negative_prompt.trim(),
+      steps: parseInt(req.body.steps) || 12,
+      width: parseInt(req.body.width) || 312,
+      height: parseInt(req.body.height) || 512,
+      restore_faces: true,
+      cfg_scale: parseInt(req.body.cfg_scale) || 5,
+      seed: parseInt(req.body.seed),
+      sampler_index: req.body.sampler_index,
+      init_image: req.body.init_image,
+      batch_size: req.body.batch_size,
+    },
+  };
+  
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.RUNPOD_API_KEY}`,
@@ -50,7 +51,22 @@ router.post("/", async (req, res) => {
 
         console.log(`[${status}]`);
         console.log(status_endpoint_template);
-        console.log("Request Body:", JSON.stringify(input, null, 2));
+        
+        console.log("Full length Request Body:", JSON.stringify(input, null, 2));
+        console.log(
+          `Just the Input with truncated init_image: \n${JSON.stringify(
+            {
+              ...input,
+              input: {
+                ...input.input,
+                init_image: (input.input.init_image || "").substring(0, 32),
+              },
+            },
+            null,
+            2
+          )}`
+        );
+
 
         if (status === "COMPLETED") {
           const output = statusJson.output;

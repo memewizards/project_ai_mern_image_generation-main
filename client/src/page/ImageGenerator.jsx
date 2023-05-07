@@ -140,9 +140,10 @@ const handleChange = (e) => {
 };
 
 const [ckptOptions, setCkptOptions] = useState([
-  { label: "chikmix_V2.safetensors", value: "gzcmggtugp8cn7" },
-  { label: "clarity_19.safetensors", value: "d8k962xmyakcfu" },
-  { label: "deliberate_v2.safetensors", value: "5pgx8i4olimo3w" }
+  
+  { label: "Deliberate v2", value: "5pgx8i4olimo3w" },
+  { label: "NeverEnding Dream v1.22", value: "ok2rv3ccoojsfx" }
+  
 ]);
 
 const [sampleOptions, setSamplerIndex] = useState([
@@ -177,14 +178,14 @@ const handleSliderInput = (name, value) => {
 const generateImage = async () => {
 
   // Check if the user is logged in using authToken
-  const authToken = localStorage.getItem("authToken");
+  // const authToken = localStorage.getItem("authToken");
 
-  const res = await fetch(`${import.meta.env.VITE_APP_URL}/profile`, {
-    headers: {
-      Authorization: `Bearer ${authToken}`,
-    },
-    credentials: "include",
-  });
+  // const res = await fetch(`${import.meta.env.VITE_APP_URL}/profile`, {
+  //   headers: {
+  //     Authorization: `Bearer ${authToken}`,
+  //   },
+  //   credentials: "include",
+  // });
 
   if (!form.sampling_index) {
     alert('Please select a sampling method!');
@@ -204,7 +205,12 @@ const generateImage = async () => {
    
     try {
       setGeneratingImg(true);
-
+      
+      let base64Image;
+        
+        if (uploadedPhoto) {
+          base64Image = uploadedPhoto.split(',')[1];
+  }
       const authToken = localStorage.getItem('authToken');
       console.log('Token from local storage:', authToken);
 
@@ -219,6 +225,7 @@ const generateImage = async () => {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
+          task: 'txt2img',
           prompt: form.prompt,
           negative_prompt: form.negativePrompt,
           selectedckpt: form.selectedckpt,
@@ -228,7 +235,10 @@ const generateImage = async () => {
           seed: form.seed,
           cfg_scale: form.cfg_scale,
           sampler_index: form.sampling_index,
+          //init_image: base64Image,
+          init_image: "https://lh3.googleusercontent.com/YN-ZVlt1bLndgJ_CXqcTpiMosiCxdEFcURQKTACFLxgeSQ4QSD1WBetaWjemDQKpjZwm1PjWW4yBjHQS8SHeEKN0DMMo-P3m6HoMTxqEHZ1X8bexNdU=w1440-l90-sg-rj-c0xffffff",
           batch_size: form.batch_size,
+          
         }),
       });
       const data = await response.json();
