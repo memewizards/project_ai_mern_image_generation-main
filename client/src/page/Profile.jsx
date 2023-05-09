@@ -89,7 +89,7 @@ const Profile = () => {
             <div className="flex flex-row">
               <div className="w-1/6">
                 <img
-                  src="https://lh3.googleusercontent.com/a-/AOh14GjSb0KZnfOv_wP8cT6M7wEoGMlpG1fFbsO1Uszm7lw=s96-c"
+                  src="/assets/profileIcon-71a8df24.svg"
                   className="w-full"
                 />
               </div>
@@ -116,17 +116,7 @@ const Profile = () => {
 
       <footer className="mt-auto py-3">
         <div className="container mx-auto">
-          <span className="text-gray-600">
-            The full guide is available at{' '}
-            <a
-              href="https://saasbase.dev/"
-              className="text-blue-600"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              saasbase.dev
-            </a>
-          </span>
+          
         </div>
       </footer>
     </div>

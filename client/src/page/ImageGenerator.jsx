@@ -44,6 +44,62 @@ const base64ToBlob = (base64) => {
   return new Blob([array], { type: 'image/png' });
 };
 
+const addWatermarkToImage = async (base64Image, watermarkText, watermarkImageUrl) => {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.src = 'data:image/png;base64,' + base64Image; // Add the data format prefix here
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = image.width;
+      canvas.height = image.height;
+
+      // Draw the image
+      ctx.drawImage(image, 0, 0);
+
+      // Load the watermark image
+      const watermarkImage = new Image();
+      watermarkImage.src = watermarkImageUrl;
+      watermarkImage.onload = () => {
+        // Calculate watermark image position
+        const imageX = 10; // Customize X position
+        const imageY = image.height - watermarkImage.height - 10; // Customize Y position
+
+        // Draw the watermark image
+        ctx.drawImage(watermarkImage, imageX, imageY);
+
+        // Set watermark text properties
+        ctx.font = '24px Arial'; // Customize font size and family
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Customize text color and opacity
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+
+        // Calculate watermark text position
+        const textX = imageX + watermarkImage.width + 5; // Customize X position
+        const textY = imageY + watermarkImage.height / 2; // Center the text vertically with the image
+
+        // Draw the watermark text
+        ctx.fillText(watermarkText, textX, textY);
+
+        // Get the base64-encoded image with watermark
+        const base64ImageWithWatermark = canvas.toDataURL('image/png');
+        resolve(base64ImageWithWatermark);
+      };
+
+      watermarkImage.onerror = (error) => {
+        console.error('Watermark image loading error:', error);
+        reject(error);
+      };
+    };
+
+    image.onerror = (error) => {
+      console.error('Base64 image loading error:', error);
+      reject(error);
+    };
+  });
+};
+
+
 const downloadAllImages = async () => {
   if (form.photo && form.photo.length > 0) {
     const zip = new JSZip();
@@ -59,7 +115,7 @@ const downloadAllImages = async () => {
     const zipFile = await zip.generateAsync({ type: 'blob' });
     saveAs(zipFile, 'images.zip');
   } else {
-    alert('No images to download');
+    alert('No images to download. Coming soon.');
   }
 };
 
@@ -95,9 +151,8 @@ const handleChange = (e) => {
 };
 
 const [ckptOptions, setCkptOptions] = useState([
-  { label: "chikmix_V2.safetensors", value: "gzcmggtugp8cn7" },
-  { label: "clarity_19.safetensors", value: "d8k962xmyakcfu" },
-  { label: "deliberate_v2.safetensors", value: "5pgx8i4olimo3w" }
+  
+  { label: "Deliberate", value: "7hznkcdogavh01"}
 ]);
 
 const [sampleOptions, setSamplerIndex] = useState([
@@ -191,11 +246,8 @@ const generateImage = async () => {
 
 // Check if there are any images in the response
 if (data.images && data.images.length > 0) {
-  // Create an array to hold the object URLs of all images
-  const imageUrls = data.images.map((image) => {
-    const blob = base64ToBlob(image);
-    return URL.createObjectURL(blob);
-  });
+   const watermarkText = 'dreambrainai.com';
+  const watermarkImageUrl = 'https://dreambrainai.com/favicon.ico'; // Replace this with the URL to your watermark image
 
   // Update the form.photo state with the new array of image URLs
   setForm({ ...form, photo: imageUrls });
@@ -315,7 +367,7 @@ return (
           onChange={handleChange}
           className="appearance-none w-full bg-gray-50 border border-gray-300 text-gray-900 py-3 px-4 pr- rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500"
         >
-          <option value="">Select a ckpt</option>
+          <option value="">Select a ckpt - 12 New Checkpoints Coming Soon</option>
           {ckptOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -605,7 +657,7 @@ return (
   onClick={downloadAllImages}
   className="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700"
 >
-  Download All Images
+  Download All Images - Coming Soon.
 </button>
 
           

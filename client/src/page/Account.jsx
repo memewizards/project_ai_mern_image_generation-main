@@ -170,31 +170,10 @@ return (
                 )}
                 <hr className="my-6 border-t-2 border-gray-200" />
                 <p className="mb-4">
-                  You can access your content by clicking one of the buttons
-                  below.
+                 Coming Soon: this page will display your collections if you wish to share them with others.
                 </p>
                 <ul className="list-disc list-inside mb-6">
-                  <li>
-                    <a href="/none" className="text-blue-600 hover:underline">
-                      None
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/BasicPlan"
-                      className="text-blue-600 hover:underline"
-                    >
-                      Basic
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/ProPlan"
-                      className="text-blue-600 hover:underline"
-                    >
-                      Pro
-                    </a>
-                  </li>
+                 
                 </ul>
                 <hr className="mb-6 border-t-2 border-gray-200" />
                 <p className="text-lg mb-4">
