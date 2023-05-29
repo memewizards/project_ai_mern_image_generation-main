@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Link, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./AuthContext";
+import useGoogleAnalytics from './hooks/useGoogleAnalytics.js'; 
 import {
   Home,
   CreatePost,
@@ -29,6 +30,9 @@ const App = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [tokenBalance, setTokenBalance] = useState(0);
   const { user, isUserFetched, fetchUserData } = useUserData(setTokenBalance);
+ const trackingId = 'G-ZSGX1FDEYX'; // Replace with your GA4 tracking ID
+  useGoogleAnalytics(trackingId); // Call the Hook
+
   
 
   const toggleDropdown = () => {

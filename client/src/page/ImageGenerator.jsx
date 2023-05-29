@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { preview } from '../assets';
 import { getRandomPrompt } from '../utils';
@@ -6,12 +6,15 @@ import { FormField, Loader } from '../components';
 import useCustomer from "../hooks/useCustomer";
 import fs from 'fs';
 import path from 'path';
-import { useContext } from "react";
 import { AuthContext } from "../AuthContext.jsx";
+
+
+
 
 
   const ImageGenerator = (props) => {
   const navigate = useNavigate();
+  const fileInput = useRef(null);
   const { isLoggedIn, tokenBalance } = useContext(AuthContext);
   const [form, setForm] = useState({
     name: '',
@@ -32,8 +35,9 @@ import { AuthContext } from "../AuthContext.jsx";
   const [generatingImg, setGeneratingImg] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageList, setImageList] = useState([]);
+  const [uploadedPhoto, setUploadedPhoto] = useState(null);
 
-  
+ 
 const base64ToBlob = (base64) => {
   const base64Data = base64.replace(/^data:image\/(png|jpg);base64,/, '');
   const binary = atob(base64Data);
@@ -43,6 +47,47 @@ const base64ToBlob = (base64) => {
   }
   return new Blob([array], { type: 'image/png' });
 };
+
+const addWatermarkToImage = async (base64Image, watermarkText) => {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.src = 'data:image/png;base64,' + base64Image;
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = image.width;
+      canvas.height = image.height;
+
+      // Draw the image
+      ctx.drawImage(image, 0, 0);
+
+      // Set watermark text properties
+      const fontSize = 16;
+      ctx.font = `${fontSize}px Arial Rounded MT`; // Change the font size and family
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; // Customize text color and opacity
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+
+      // Calculate watermark text position
+      const textX = 10; // Customize X position
+      const textY = image.height - fontSize - 10; // Customize Y position
+
+      // Draw the watermark text
+      ctx.fillText(watermarkText, textX, textY);
+
+      // Get the base64-encoded image with watermark
+      const base64ImageWithWatermark = canvas.toDataURL('image/png');
+      resolve(base64ImageWithWatermark);
+    };
+
+    image.onerror = (error) => {
+      reject(error);
+    };
+  });
+};
+
+
+
 
 const downloadAllImages = async () => {
   if (form.photo && form.photo.length > 0) {
@@ -69,7 +114,7 @@ const downloadAllImages = async () => {
   };
 
 
-  
+ 
 const handleChange = (e) => {
   const { name, value } = e.target;
   setForm({ ...form, [name]: value });
@@ -95,9 +140,11 @@ const handleChange = (e) => {
 };
 
 const [ckptOptions, setCkptOptions] = useState([
-  { label: "chikmix_V2.safetensors", value: "gzcmggtugp8cn7" },
-  { label: "clarity_19.safetensors", value: "d8k962xmyakcfu" },
-  { label: "deliberate_v2.safetensors", value: "5pgx8i4olimo3w" }
+  
+  { label: "Deliberate v2", value: "5pgx8i4olimo3w" },
+  { label: "NeverEnding Dream v1.22", value: "8emnlgzq7ri62z" },
+  { label: "Pop PopCorn Mix", value: "3y5902wp2wf0cd" }
+  
 ]);
 
 const [sampleOptions, setSamplerIndex] = useState([
@@ -132,29 +179,39 @@ const handleSliderInput = (name, value) => {
 const generateImage = async () => {
 
   // Check if the user is logged in using authToken
-  const authToken = localStorage.getItem("authToken");
+  // const authToken = localStorage.getItem("authToken");
 
-  const res = await fetch(`${import.meta.env.VITE_APP_URL}/profile`, {
-    headers: {
-      Authorization: `Bearer ${authToken}`,
-    },
-    credentials: "include",
-  });
+  // const res = await fetch(`${import.meta.env.VITE_APP_URL}/profile`, {
+  //   headers: {
+  //     Authorization: `Bearer ${authToken}`,
+  //   },
+  //   credentials: "include",
+  // });
 
-  if (res.status === 404) {
-    console.log("User is not logged in");
+  if (!form.sampling_index) {
+    alert('Please select a sampling method!');
     return;
   }
 
+  // if (res.status === 404) {
+  //   console.log("User is not logged in");
+  //   return;
+  // }
+
   if (form.prompt) {
-    if (props.tokenBalance <= 0) { // Add this check for token balance
-      alert("Low token balance. Get 10 free tokens by signing up, or buy more tokens.");
-      return;
-    }
-    
+    // if (props.tokenBalance <= 0) { // Add this check for token balance
+    //   alert("Low token balance. Get 10 free tokens by signing up, or buy more tokens.");
+    //   return;
+    //}
+   
     try {
       setGeneratingImg(true);
-
+      
+      let base64Image;
+        
+        if (uploadedPhoto) {
+          base64Image = uploadedPhoto.split(',')[1];
+  }
       const authToken = localStorage.getItem('authToken');
       console.log('Token from local storage:', authToken);
 
@@ -165,10 +222,11 @@ const generateImage = async () => {
 
       console.log('Request headers:', headers);
 
-      const response = await fetch(`${import.meta.env.VITE_APP_URL}/api/v1/runpod`, {
+      const response = await fetch(`http://localhost:8080/api/v1/runpod`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
+          task: 'img2img',
           prompt: form.prompt,
           negative_prompt: form.negativePrompt,
           selectedckpt: form.selectedckpt,
@@ -178,7 +236,10 @@ const generateImage = async () => {
           seed: form.seed,
           cfg_scale: form.cfg_scale,
           sampler_index: form.sampling_index,
+         init_image: base64Image,
+         //init_image: "https://i.imgur.com/fhw7rwp.png",
           batch_size: form.batch_size,
+          
         }),
       });
       const data = await response.json();
@@ -189,30 +250,35 @@ const generateImage = async () => {
   throw new Error(data.error);
 }
 
-// Check if there are any images in the response
 if (data.images && data.images.length > 0) {
+  const watermarkText = 'dreambrainai.com';
+
   // Create an array to hold the object URLs of all images
-  const imageUrls = data.images.map((image) => {
-    const blob = base64ToBlob(image);
-    return URL.createObjectURL(blob);
-  });
+  const imageUrls = await Promise.all(
+    data.images.map(async (image) => {
+      const base64ImageWithWatermark = await addWatermarkToImage(image, watermarkText);
+      const blob = base64ToBlob(base64ImageWithWatermark);
+      return URL.createObjectURL(blob);
+    })
+  );
 
   // Update the form.photo state with the new array of image URLs
   setForm({ ...form, photo: imageUrls });
 
   // Emit the tokenBalanceUpdate event
   const actualTokensSubtracted = data.tokensSubtracted;
-const newBalance = props.tokenBalance - actualTokensSubtracted;
+  const newBalance = props.tokenBalance - actualTokensSubtracted;
 
-if (newBalance < 0) {
-  console.error('Unexpected negative token balance:', newBalance);
-}
+  if (newBalance < 0) {
+    console.error('Unexpected negative token balance:', newBalance);
+  }
 
-emitTokenBalanceUpdate(newBalance);
-props.getTokenBalance();
+  emitTokenBalanceUpdate(newBalance);
+  props.getTokenBalance();
 } else {
   throw new Error('No images were generated.');
 }
+
 
 
 } catch (err) {
@@ -233,7 +299,7 @@ props.getTokenBalance();
     const newValue = e.target.value;
     onChange(step, newValue);
   };
-  
+ 
 };
 
 
@@ -287,8 +353,33 @@ const handleSubmit = async (e) => {
 };
 
 
+const onDrop = (event) => {
+  event.preventDefault();
+  const file = event.dataTransfer.files[0];
+  handleFileUpload(file);
+};
 
+const handleFileUpload = (file) => {
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const imgData = event.target.result;
+    setUploadedPhoto(imgData);
+  };
+  if (file) {
+    reader.readAsDataURL(file);
+  } else {
+    setUploadedPhoto('');
+  }
+};
 
+const clearImage = () => {
+  setUploadedPhoto('');
+};
+const handlePreview = (event) => {
+  const file = event.target.files[0];
+  handleFileUpload(file);
+  setPreview(URL.createObjectURL(file));
+};
 
 return (
   <section className="max-w-7xl mx-auto">
@@ -299,7 +390,7 @@ return (
       </p>
      </div>
 
-  
+ 
 
   <form className="mt-16 max-w-3xl" onSubmit={handleSubmit} enctype="multipart/form-data">
   <div className="flex flex-col gap-5">
@@ -322,7 +413,7 @@ return (
             </option>
           ))}
       </select>
-      
+     
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
           <svg
             className="h-4 w-4 fill-current"
@@ -337,38 +428,92 @@ return (
           </svg>
         </div>
       </div>
+      
       </div>
 
-      
+     
 
-<div className="relative bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full h-full flex justify-center items-center flex-wrap">
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 w-full">
-    {form.photo ? (
-      form.photo.map((image, index) => (
-        <div key={`image-container-${index}`}>
-          <img
-            key={`image-${index}`}
-            src={image}
-            alt={form.prompt}
-            className="w-full h-auto object-contain"
-          />
-        </div>
-      ))
+      <div className="flex justify-between items-center">
+      <div className="w-1/2">
+  <div
+    onDragOver={(event) => event.preventDefault()}
+    onDrop={onDrop}
+    className="relative bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full h-full flex justify-center items-center flex-wrap"
+  >
+    <input
+      type="file"
+      accept="image/*"
+      onChange={handlePreview}
+      style={{ display: "none" }}
+      ref={fileInput}
+    />
+    {uploadedPhoto ? (
+      <div className="relative">
+        <button onClick={clearImage} className="absolute top-2 right-2">
+          Remove Image
+        </button>
+        <img
+          src={uploadedPhoto}
+          alt="uploaded"
+          className="w-full h-auto object-contain"
+        />
+      </div>
     ) : (
-      <img
-        src={preview}
-        alt="preview"
-        className="w-9/12 h-9/12 object-contain opacity-40"
-      />
+      <div
+        onClick={() => fileInput.current.click()}
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 w-full"
+      >
+        <img
+          src={preview}
+          alt="preview"
+          className="w-9/12 h-9/12 object-contain opacity-40"
+        />
+        <div className="absolute text-center w-full">
+          <p className="text-gray-500">Drop Image Here -or- Click to Upload</p>
+        </div>
+      </div>
     )}
   </div>
 
-  {generatingImg && (
-    <div className="absolute inset-0 z-0 flex justify-center items-center bg-[rgba(0,0,0,0.5)] rounded-lg">
-      <Loader />
-    </div>
-  )}
+  
 </div>
+
+
+<div className="w-1/2">
+  <div className="relative bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full h-full flex justify-center items-center flex-wrap">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 w-full">
+      {form.photo
+        ? form.photo.map((image, index) => (
+            <div key={`image-container-${index}`}>
+              <img
+                key={`image-${index}`}
+                src={image}
+                alt={form.prompt}
+                className="w-full h-auto object-contain"
+              />
+            </div>
+          ))
+        : (
+          <img
+            src={preview}
+            alt="preview"
+            className="w-9/12 h-9/12 object-contain opacity-40"
+          />
+        )}
+    </div>
+  </div>
+</div>
+
+</div>
+
+
+{generatingImg && (
+  <div className="absolute inset-0 z-0 flex justify-center items-center bg-[rgba(0,0,0,0.5)] rounded-lg">
+    <Loader />
+  </div>
+)}
+
+
 
       <FormField
         labelName="Your Name"
@@ -400,12 +545,12 @@ return (
         isSuggestedNegativePrompt
         handleSuggestedNegativePrompt={handleSuggestedNegativePrompt}
 
-            
+           
 
-      /> 
+      />
 
               <div className="flex flex-col gap-5">
-      
+     
       <label htmlFor="sampling_index" className="text-gray-900 font-medium">
         Sampling method
       </label>
@@ -600,6 +745,8 @@ return (
        />
      </div>
    </div>
+                    <p className="mt-2 text-[#666e75] text-[14px]">Please make sure all the items are filled out before making the image.</p>
+                    <p className="mt-2 text-[#666e75] text-[14px]"></p>
 
             <button
   onClick={downloadAllImages}
@@ -608,8 +755,8 @@ return (
   Download All Images
 </button>
 
-          
-        
+         
+       
 
         <div className="mt-5 flex gap-5">
           <button
@@ -622,7 +769,8 @@ return (
         </div>
 
         <div className="mt-10">
-          <p className="mt-2 text-[#666e75] text-[14px]">This will post your images to the home page</p>
+          <p className="mt-2 text-[#666e75] text-[14px]">This will post your images to the home page.</p>
+
           <button
             type="submit"
             className="mt-3 text-white bg-[#6469ff] font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center"

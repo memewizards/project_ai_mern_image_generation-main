@@ -18,30 +18,31 @@ router.post("/", async (req, res) => {
     const status_endpoint_template = `https://api.runpod.ai/v1/${selectedckpt}/status/`;
 
     // Get prompt and negative_prompt from the request
-    const { prompt, negative_prompt } = req.body;
-    
-    const input = {
-      input: {
-        prompt: prompt.trim(),
-        negative_prompt: negative_prompt.trim(),
-        steps: parseInt(req.body.steps) || 12,
-        width: parseInt(req.body.width) || 312,
-        height: parseInt(req.body.height) || 512,
-        restore_faces: true,
-        cfg_scale: parseInt(req.body.cfg_scale) || 5,
-        seed: parseInt(req.body.seed),
-        sampler_index: req.body.sampler_index,
-        batch_size: req.body.batch_size,
-      },
-      
-    };
-    
+  const { prompt, negative_prompt } = req.body;
+  
+  const input = {
+    input: {
+      task: req.body.task,
+      prompt: prompt.trim(),
+      negative_prompt: negative_prompt.trim(),
+      steps: parseInt(req.body.steps) || 12,
+      width: parseInt(req.body.width) || 312,
+      height: parseInt(req.body.height) || 512,
+      restore_faces: true,
+      cfg_scale: parseInt(req.body.cfg_scale) || 5,
+      seed: parseInt(req.body.seed),
+      sampler_index: req.body.sampler_index,
+      init_image: req.body.init_image,
+      batch_size: req.body.batch_size,
+    },
+  };
+  
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.RUNPOD_API_KEY}`,
     };
     
-    const checkStatus = async (jobId, userEmail, startTime = Date.now()) => {
+    const checkStatus = async (jobId, startTime = Date.now()) => {
       const statusEndpoint = `${status_endpoint_template}${jobId}`;
       try {
         const statusResponse = await fetch(statusEndpoint, { headers });
@@ -50,7 +51,22 @@ router.post("/", async (req, res) => {
 
         console.log(`[${status}]`);
         console.log(status_endpoint_template);
-        console.log("Request Body:", JSON.stringify(input, null, 2));
+        
+        console.log("Full length Request Body:", JSON.stringify(input, null, 2));
+        console.log(
+          `Just the Input with truncated init_image: \n${JSON.stringify(
+            {
+              ...input,
+              input: {
+                ...input.input,
+                init_image: (input.input.init_image || "").substring(0, 32),
+              },
+            },
+            null,
+            2
+          )}`
+        );
+
 
         if (status === "COMPLETED") {
           const output = statusJson.output;
@@ -80,7 +96,7 @@ router.post("/", async (req, res) => {
                 },
                 credentials: "include",
                 body: JSON.stringify({
-                  email: userEmail,
+                  //email: userEmail,
                   tokensToSubtract: tokensToSubtract,
                 }),
               }
@@ -96,17 +112,17 @@ router.post("/", async (req, res) => {
            }
 
            // Update the user's token balance in the system
-          if (userEmail) {
-            console.log(
-              `Attempting to update token balance for user: ${userEmail}`
-            );
+          // if (userEmail) {
+          //   console.log(
+          //     `Attempting to update token balance for user: ${userEmail}`
+          //   );
 
-          await UserService.updateUserTokenBalance(userEmail, newBalance);
-          } else {
-            console.error("Error: userEmail is undefined or empty.");
-          }
+          // await UserService.updateUserTokenBalance(userEmail, newBalance);
+          // } else {
+          //   console.error("Error: userEmail is undefined or empty.");
+          // }
 
-           console.log(`runpodRoutes: New token balance: ${newBalance}`);
+          //  console.log(`runpodRoutes: New token balance: ${newBalance}`);
 
             // Add the new balance to the response JSON
             // Add the actual subtracted tokens to the response JSON
@@ -121,7 +137,8 @@ router.post("/", async (req, res) => {
         } else if (status === "FAILED") {
           res.send("The job failed. Tokens are returned to your balance."); // Return a message to the client if the job failed
         } else {
-          setTimeout(() => checkStatus(jobId, userEmail, startTime), 1000);
+          setTimeout(() => checkStatus(jobId, startTime), 1000);
+          //setTimeout(() => checkStatus(jobId, userEmail, startTime), 1000);
         }
       } catch (error) {
         console.error("There was an error:", error);
@@ -145,8 +162,9 @@ try {
     throw new Error("Job ID not found");
   }
 
-  const userEmail = req.user.email; // Get the user email from the request user object
-  checkStatus(jobId, userEmail); // Pass the userEmail to the checkStatus function
+  //const userEmail = req.user.email; // Get the user email from the request user object
+  //checkStatus(jobId, userEmail); 
+  checkStatus(jobId, );// Pass the userEmail to the checkStatus function
 } catch (error) {
   console.error(error);
   res.status(500).send(error.message);
