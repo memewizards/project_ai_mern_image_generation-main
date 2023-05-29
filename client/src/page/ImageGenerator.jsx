@@ -142,7 +142,8 @@ const handleChange = (e) => {
 const [ckptOptions, setCkptOptions] = useState([
   
   { label: "Deliberate v2", value: "5pgx8i4olimo3w" },
-  { label: "NeverEnding Dream v1.22", value: "ok2rv3ccoojsfx" }
+  { label: "NeverEnding Dream v1.22", value: "8emnlgzq7ri62z" },
+  { label: "Pop PopCorn Mix", value: "3y5902wp2wf0cd" }
   
 ]);
 
@@ -225,7 +226,7 @@ const generateImage = async () => {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
-          task: 'txt2img',
+          task: 'img2img',
           prompt: form.prompt,
           negative_prompt: form.negativePrompt,
           selectedckpt: form.selectedckpt,
@@ -235,8 +236,8 @@ const generateImage = async () => {
           seed: form.seed,
           cfg_scale: form.cfg_scale,
           sampler_index: form.sampling_index,
-          //init_image: base64Image,
-          init_image: "https://lh3.googleusercontent.com/YN-ZVlt1bLndgJ_CXqcTpiMosiCxdEFcURQKTACFLxgeSQ4QSD1WBetaWjemDQKpjZwm1PjWW4yBjHQS8SHeEKN0DMMo-P3m6HoMTxqEHZ1X8bexNdU=w1440-l90-sg-rj-c0xffffff",
+         init_image: base64Image,
+         //init_image: "https://i.imgur.com/fhw7rwp.png",
           batch_size: form.batch_size,
           
         }),
@@ -362,13 +363,23 @@ const handleFileUpload = (file) => {
   const reader = new FileReader();
   reader.onload = (event) => {
     const imgData = event.target.result;
-    // Update the uploadedPhoto state instead of form.photo
     setUploadedPhoto(imgData);
   };
-  reader.readAsDataURL(file);
+  if (file) {
+    reader.readAsDataURL(file);
+  } else {
+    setUploadedPhoto('');
+  }
 };
 
-
+const clearImage = () => {
+  setUploadedPhoto('');
+};
+const handlePreview = (event) => {
+  const file = event.target.files[0];
+  handleFileUpload(file);
+  setPreview(URL.createObjectURL(file));
+};
 
 return (
   <section className="max-w-7xl mx-auto">
@@ -432,34 +443,39 @@ return (
     <input
       type="file"
       accept="image/*"
-      onChange={(event) => handleFileUpload(event.target.files[0])}
+      onChange={handlePreview}
       style={{ display: "none" }}
       ref={fileInput}
     />
-    <div
-      onClick={() => fileInput.current.click()}
-      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 w-full"
-    >
-      {uploadedPhoto ? (
+    {uploadedPhoto ? (
+      <div className="relative">
+        <button onClick={clearImage} className="absolute top-2 right-2">
+          Remove Image
+        </button>
         <img
           src={uploadedPhoto}
           alt="uploaded"
           className="w-full h-auto object-contain"
         />
-      ) : (
-        <>
-          <img
-            src={preview}
-            alt="preview"
-            className="w-9/12 h-9/12 object-contain opacity-40"
-          />
-          <div className="absolute text-center w-full">
-            <p className="text-gray-500">Drop Image Here -or- Click to Upload</p>
-          </div>
-        </>
-      )}
-    </div>
+      </div>
+    ) : (
+      <div
+        onClick={() => fileInput.current.click()}
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 w-full"
+      >
+        <img
+          src={preview}
+          alt="preview"
+          className="w-9/12 h-9/12 object-contain opacity-40"
+        />
+        <div className="absolute text-center w-full">
+          <p className="text-gray-500">Drop Image Here -or- Click to Upload</p>
+        </div>
+      </div>
+    )}
   </div>
+
+  
 </div>
 
 
@@ -729,6 +745,8 @@ return (
        />
      </div>
    </div>
+                    <p className="mt-2 text-[#666e75] text-[14px]">Please make sure all the items are filled out before making the image.</p>
+                    <p className="mt-2 text-[#666e75] text-[14px]"></p>
 
             <button
   onClick={downloadAllImages}
@@ -751,7 +769,8 @@ return (
         </div>
 
         <div className="mt-10">
-          <p className="mt-2 text-[#666e75] text-[14px]">This will post your images to the home page</p>
+          <p className="mt-2 text-[#666e75] text-[14px]">This will post your images to the home page.</p>
+
           <button
             type="submit"
             className="mt-3 text-white bg-[#6469ff] font-medium rounded-md text-sm w-full sm:w-auto px-5 py-2.5 text-center"

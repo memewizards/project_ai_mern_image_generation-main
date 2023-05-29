@@ -106,13 +106,13 @@ router.post(
         if (data.plan.id === process.env.PRODUCT_BASIC) {
           console.log("You are talking about basic product");
           user.plan = "basic";
-          user.tokenBalance += 200; // Add tokens when subscribing to the basic plan
+          
         }
 
         if (data.plan.id === process.env.PRODUCT_PRO) {
           console.log("You are talking about pro product");
           user.plan = "pro";
-          user.tokenBalance += 450; // Add tokens when subscribing to the basic plan
+         
         }
 
         user.hasTrial = true;

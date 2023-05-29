@@ -15,8 +15,14 @@ const postSchema = new Schema({
   photoUrls: { type: [String], required: true },
   upvotes: { type: Number, default: 0 },
   downvotes: { type: Number, default: 0 },
-  seed: { type: Number, default: -0 },
+  seed: { type: Number, default: -1 },
+  dateCreated: { type: Date, default: Date.now },
+  nsfwIdentification: { type: String },
+  userEmail: { type: String },
+  trendingScore: { type: Number, default: 0 },
+  tags: { type: [String] },
 });
+
 
 const Post = mongoose.model("Post", postSchema);
 
