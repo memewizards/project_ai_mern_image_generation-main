@@ -1,4 +1,3 @@
-# Build and Deploy a Full Stack MERN AI Image Generation App  MidJourney & DALL E Clone
-![Image Generation App](https://i.ibb.co/p0f27C2/Thumbnail-9.png)
+This project includes the source code for both the front end and backend of dreambrainai.com. 
 
-### Launch your development career with project-based coaching - https://www.jsmastery.pro
+This project includes google auth, token management, stripe integration with webhooks, user accounts managed via mongodb, and a newsfeed-style community page where authenticated users can share the images they create. 
